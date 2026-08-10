@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next'
+﻿import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
@@ -16,6 +16,14 @@ export const metadata: Metadata = {
   },
   description:
     'Connect PostgreSQL, MySQL, MongoDB, Supabase, Neon and more. Ask your database questions in natural language, generate safe SQL, visualize results, and build dashboards with Internite AI.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/logo.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/logo.png',
+  },
   keywords: [
     'AI database chatbot',
     'natural language SQL',
@@ -66,7 +74,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
   ],
 }
 
@@ -85,7 +93,7 @@ export default function RootLayout({
         url: 'https://internite.online',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://internite.online/og-image.png',
+          url: 'https://internite.online/logo.png',
         },
         sameAs: ['https://github.com/mangal3108/AI-Database'],
       },
