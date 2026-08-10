@@ -1,351 +1,186 @@
+﻿import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { Database, MessageSquare, BookmarkCheck, Zap, Plus, ArrowRight, Sparkles, Check, ChevronRight } from 'lucide-react'
-import type { Metadata } from 'next'
+import {
+  Database, MessageSquare, BarChart3, ArrowUpRight, Plus, Activity,
+  CheckCircle2, Clock, Shield, Sparkles, ChevronRight
+} from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Dashboard — Internite AI',
+  title: 'Overview — Internite AI',
 }
 
-async function getDashboardData(userId: string) {
+export default async function DashboardPage() {
+  const session = await auth()
+  const userId = session?.user?.id ?? ''
+
   const membership = await prisma.membership.findFirst({
     where: { userId },
     include: { organization: true },
   })
 
-  if (!membership) return null
+  const orgId = membership?.organizationId
 
-  const [connectionsCount, conversationsCount, savedQueriesCount, usageRecord] = await Promise.all([
-    prisma.databaseConnection.count({
-      where: { organizationId: membership.organizationId, deletedAt: null },
-    }),
-    prisma.conversation.count({
-      where: { organizationId: membership.organizationId, deletedAt: null },
-    }),
-    prisma.savedQuery.count({
-      where: { organizationId: membership.organizationId },
-    }),
-    prisma.usageRecord.findFirst({
-      where: { organizationId: membership.organizationId },
-      orderBy: { createdAt: 'desc' },
-    }),
-  ])
+  const databases = orgId
+    ? await prisma.databaseConnection.findMany({
+        where: { organizationId: orgId },
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+      })
+    : []
 
-  const recentConversations = await prisma.conversation.findMany({
-    where: { organizationId: membership.organizationId, deletedAt: null },
-    orderBy: { updatedAt: 'desc' },
-    take: 5,
-    include: {
-      connection: { select: { name: true, type: true } },
-      messages: {
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-        select: { content: true, role: true },
-      },
-    },
-  })
-
-  const connections = await prisma.databaseConnection.findMany({
-    where: { organizationId: membership.organizationId, deletedAt: null },
-    select: { id: true, name: true, type: true, status: true },
-    take: 4,
-  })
-
-  return {
-    org: membership.organization,
-    connectionsCount,
-    conversationsCount,
-    savedQueriesCount,
-    aiQueriesUsed: usageRecord?.value ?? 0,
-    recentConversations,
-    connections,
-  }
-}
-
-export default async function DashboardPage() {
-  const session = await auth()
-  const data = await getDashboardData(session?.user?.id ?? '')
-
-  const firstName = session?.user?.name?.split(' ')[0] ?? 'there'
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Setting up your workspace...</p>
-      </div>
-    )
-  }
+  const conversations = orgId
+    ? await prisma.conversation.findMany({
+        where: { organizationId: orgId },
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+      })
+    : []
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
-      {/* Welcome Banner */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-950 border border-indigo-500/20">
+    <div className="p-6 lg:p-10 max-w-6xl mx-auto font-sans space-y-10 text-slate-100">
+      {/* Welcome Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
-            {greeting}, {firstName}.
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Good day, {session?.user?.name ?? 'Developer'}.
           </h1>
-          <p className="text-sm text-slate-300 mt-1">Talk to your database in plain English. Get answers, SQL & charts instantly.</p>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Here is what is happening across your databases and AI intelligence layer.
+          </p>
         </div>
-        <Link
-          href="/dashboard/chat"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-600/30"
-        >
-          <Sparkles size={16} />
-          Start AI Chat
-        </Link>
-      </div>
-
-      {/* 3-Step Onboarding Guide */}
-      <div className="bg-[#090D16] border border-slate-800 rounded-2xl p-6">
-        <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest mb-4">ONBOARDING PROGRESS</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`p-4 rounded-xl border ${data.connectionsCount > 0 ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-slate-900/60 border-slate-800'}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono font-bold text-emerald-400">① CONNECT DATABASE</span>
-              {data.connectionsCount > 0 ? <Check size={16} className="text-emerald-400" /> : <Link href="/dashboard/databases/new" className="text-xs text-indigo-400 hover:underline">Connect →</Link>}
-            </div>
-            <p className="text-xs text-slate-300">Connect PostgreSQL, MySQL, MongoDB, Neon or Supabase.</p>
-          </div>
-
-          <div className={`p-4 rounded-xl border ${data.connectionsCount > 0 ? 'bg-indigo-950/30 border-indigo-500/30' : 'bg-slate-900/40 border-slate-800/60'}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono font-bold text-indigo-400">② SCHEMA INDEXING</span>
-              <span className="text-[10px] font-mono text-slate-400">AUTOMATIC</span>
-            </div>
-            <p className="text-xs text-slate-300">Hybrid RAG indexes tables, fields and foreign key relations.</p>
-          </div>
-
-          <div className={`p-4 rounded-xl border ${data.conversationsCount > 0 ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-slate-900/40 border-slate-800/60'}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono font-bold text-cyan-400">③ ASK AI QUESTIONS</span>
-              {data.conversationsCount > 0 ? <Check size={16} className="text-emerald-400" /> : <Link href="/dashboard/chat" className="text-xs text-cyan-400 hover:underline">Try Now →</Link>}
-            </div>
-            <p className="text-xs text-slate-300">Ask natural language questions & auto-generate charts.</p>
-          </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/chat"
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-sm shadow-indigo-600/20"
+          >
+            <MessageSquare size={14} />
+            Ask Question
+          </Link>
+          <Link
+            href="/dashboard/databases/new"
+            className="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all"
+          >
+            <Plus size={14} />
+            Connect DB
+          </Link>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          icon={Database}
-          label="Connected Databases"
-          value={data.connectionsCount}
-          href="/dashboard/databases"
-          color="text-blue-500"
-          bg="bg-blue-500/10"
-        />
-        <StatCard
-          icon={MessageSquare}
-          label="Conversations"
-          value={data.conversationsCount}
-          href="/dashboard/chat"
-          color="text-purple-500"
-          bg="bg-purple-500/10"
-        />
-        <StatCard
-          icon={BookmarkCheck}
-          label="Saved Queries"
-          value={data.savedQueriesCount}
-          href="/dashboard/queries"
-          color="text-green-500"
-          bg="bg-green-500/10"
-        />
-        <StatCard
-          icon={Zap}
-          label="AI Queries Used"
-          value={data.aiQueriesUsed}
-          href="/dashboard/settings"
-          color="text-yellow-500"
-          bg="bg-yellow-500/10"
-          suffix="/ 100"
-        />
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Connected Databases', value: databases.length, sub: 'Active PostgreSQL & MySQL', icon: Database, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: 'AI Conversations', value: conversations.length, sub: 'Natural language queries', icon: MessageSquare, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+          { label: 'RAG Knowledge Index', value: 'Ready', sub: 'Schema graph vector space', icon: Sparkles, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+          { label: 'Security Policy', value: 'Read-Only', sub: 'AST Query Safety Engine', icon: Shield, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+        ].map(m => (
+          <div key={m.label} className="bg-[#111113]/80 border border-white/5 rounded-2xl p-5 backdrop-blur-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-400 font-medium">{m.label}</span>
+              <div className={`p-2 rounded-xl ${m.bg} ${m.color}`}>
+                <m.icon size={15} />
+              </div>
+            </div>
+            <div className="text-2xl font-black text-white font-sans">{m.value}</div>
+            <p className="text-[11px] text-slate-500 font-mono">{m.sub}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Databases */}
-        <div className="bg-card/40 border border-border/50 rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
-            <h2 className="font-semibold text-foreground text-sm">Connected Databases</h2>
-            <Link href="/dashboard/databases" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-              View all <ArrowRight size={12} />
+      {/* Main Section Grid */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Connected Databases List (2 Cols) */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">YOUR DATABASES</h2>
+            <Link href="/dashboard/databases" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">
+              View all <ChevronRight size={13} />
             </Link>
           </div>
 
-          {data.connections.length === 0 ? (
-            <EmptyState
-              icon={Database}
-              title="No databases connected"
-              description="Connect your first database to start asking questions."
-              action={{ label: 'Connect database', href: '/dashboard/databases/new' }}
-            />
+          {databases.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-[#111113] border border-white/5 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+                <Database size={20} />
+              </div>
+              <h3 className="text-sm font-bold text-white">No databases connected yet</h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                Connect your PostgreSQL, MySQL, or MongoDB database to start asking questions in natural language.
+              </p>
+              <Link
+                href="/dashboard/databases/new"
+                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-md shadow-indigo-600/20"
+              >
+                Connect First Database
+              </Link>
+            </div>
           ) : (
-            <div className="divide-y divide-border/50">
-              {data.connections.map(conn => (
-                <Link
-                  key={conn.id}
-                  href={`/dashboard/databases/${conn.id}`}
-                  className="flex items-center gap-3 px-6 py-3.5 hover:bg-muted/30 transition-colors"
+            <div className="space-y-3">
+              {databases.map(db => (
+                <div
+                  key={db.id}
+                  className="p-4 rounded-2xl bg-[#111113] border border-white/5 hover:border-white/10 transition-all flex items-center justify-between group"
                 >
-                  <div className="status-dot" style={{
-                    background: conn.status === 'CONNECTED' ? 'hsl(142, 76%, 36%)' :
-                      conn.status === 'ERROR' ? 'hsl(0, 84%, 60%)' :
-                      conn.status === 'INDEXING' ? 'hsl(45, 93%, 47%)' : 'hsl(var(--muted-foreground))',
-                  }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{conn.name}</p>
-                    <p className="text-xs text-muted-foreground">{conn.type}</p>
-                  </div>
-                  <ChevronRight size={14} className="text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          )}
-
-          <div className="px-6 py-3 border-t border-border/50">
-            <Link
-              href="/dashboard/databases/new"
-              className="flex items-center gap-2 text-sm text-primary hover:opacity-80 transition-opacity font-medium"
-            >
-              <Plus size={14} />
-              Add database
-            </Link>
-          </div>
-        </div>
-
-        {/* Recent Conversations */}
-        <div className="bg-card/40 border border-border/50 rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
-            <h2 className="font-semibold text-foreground text-sm">Recent Conversations</h2>
-            <Link href="/dashboard/chat" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-              View all <ArrowRight size={12} />
-            </Link>
-          </div>
-
-          {data.recentConversations.length === 0 ? (
-            <EmptyState
-              icon={MessageSquare}
-              title="No conversations yet"
-              description="Connect a database and start asking questions."
-              action={{ label: 'Start a chat', href: '/dashboard/chat' }}
-            />
-          ) : (
-            <div className="divide-y divide-border/50">
-              {data.recentConversations.map(conv => (
-                <Link
-                  key={conv.id}
-                  href={`/dashboard/chat/${conv.id}`}
-                  className="flex items-start gap-3 px-6 py-3.5 hover:bg-muted/30 transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <MessageSquare size={12} className="text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {conv.title ?? 'Untitled conversation'}
-                    </p>
-                    {conv.messages[0] && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5 font-sans">
-                        {(() => {
-                          const raw = conv.messages[0].content.trim()
-                          if (raw.startsWith('```json') || raw.startsWith('{')) {
-                            try {
-                              let jsonText = raw
-                              const match = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
-                              if (match) jsonText = match[1]!.trim()
-                              const parsed = JSON.parse(jsonText)
-                              if (parsed.answer) return parsed.answer.slice(0, 65) + '...'
-                            } catch {
-                              // Fallback if parsing fails
-                            }
-                          }
-                          return raw.slice(0, 65) + '...'
-                        })()}
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center text-indigo-400">
+                      <Database size={18} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm">{db.name}</span>
+                        <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {db.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 font-mono mt-0.5">
+                        {db.type} · Read-only validated
                       </p>
-                    )}
-                    {conv.connection && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{conv.connection.name}</p>
-                    )}
+                    </div>
                   </div>
+                  <Link
+                    href={`/dashboard/databases/${db.id}`}
+                    className="text-xs font-semibold text-slate-400 hover:text-white px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors flex items-center gap-1"
+                  >
+                    <span>Manage</span>
+                    <ArrowUpRight size={13} />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Activity / Chats (1 Col) */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">RECENT CHATS</h2>
+
+          {conversations.length === 0 ? (
+            <div className="p-6 rounded-2xl bg-[#111113] border border-white/5 text-center text-xs text-slate-500">
+              No recent chat activity
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {conversations.map(c => (
+                <Link
+                  key={c.id}
+                  href={`/dashboard/chat/${c.id}`}
+                  className="p-3.5 rounded-2xl bg-[#111113] border border-white/5 hover:border-white/10 hover:bg-white/[0.02] transition-all flex items-center justify-between block group"
+                >
+                  <div className="flex items-center gap-2.5 truncate pr-2">
+                    <MessageSquare size={14} className="text-indigo-400 shrink-0" />
+                    <span className="text-xs font-medium text-slate-200 truncate group-hover:text-white">
+                      {c.title ?? 'Untitled Analysis'}
+                    </span>
+                  </div>
+                  <ChevronRight size={13} className="text-slate-600 group-hover:text-slate-300 shrink-0" />
                 </Link>
               ))}
             </div>
           )}
-
-          <div className="px-6 py-3 border-t border-border/50">
-            <Link
-              href="/dashboard/chat"
-              className="flex items-center gap-2 text-sm text-primary hover:opacity-80 transition-opacity font-medium"
-            >
-              <Plus size={14} />
-              New conversation
-            </Link>
-          </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  href,
-  color,
-  bg,
-  suffix,
-}: {
-  icon: typeof Database
-  label: string
-  value: number
-  href: string
-  color: string
-  bg: string
-  suffix?: string
-}) {
-  return (
-    <Link href={href} className="group bg-card/40 border border-border/50 rounded-2xl p-5 hover:border-border hover:bg-card/70 transition-all">
-      <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform border border-white/5`}>
-        <Icon size={16} className={color} />
-      </div>
-      <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-bold text-foreground">{value}</span>
-        {suffix && <span className="text-sm text-muted-foreground">{suffix}</span>}
-      </div>
-      <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
-    </Link>
-  )
-}
-
-function EmptyState({
-  icon: Icon,
-  title,
-  description,
-  action,
-}: {
-  icon: typeof Database
-  title: string
-  description: string
-  action: { label: string; href: string }
-}) {
-  return (
-    <div className="flex flex-col items-center text-center px-6 py-10">
-      <div className="w-12 h-12 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mb-4">
-        <Icon size={22} className="text-indigo-400" />
-      </div>
-      <p className="font-semibold text-foreground text-base mb-1">{title}</p>
-      <p className="text-xs text-muted-foreground mb-5 max-w-xs leading-relaxed">{description}</p>
-      <Link
-        href={action.href}
-        className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-600/25 flex items-center gap-2"
-      >
-        <Plus size={14} />
-        <span>{action.label}</span>
-      </Link>
     </div>
   )
 }
