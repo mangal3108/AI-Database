@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Sparkles, Check, Copy, ChevronDown, Table as TableIcon, Code2, BarChart3,
-  Lightbulb, GitFork, ArrowRight, Bookmark, LayoutDashboard, Download, ThumbsUp, ThumbsDown
+  Lightbulb, GitFork, ArrowRight, Bookmark, LayoutDashboard, Database, AlertCircle
 } from 'lucide-react'
 import { ResultTable } from '@/components/chat/result-table'
 import { ChartRenderer } from '@/components/chat/chart-renderer'
@@ -12,6 +12,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter'
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import type { AiResponse } from '@/lib/zod-schemas'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 export interface MessageMetadata {
   query?: string
@@ -42,22 +43,8 @@ export interface MessageItem {
   executionError?: string
 }
 
-export function MessageBubble({ message }: { message: MessageItem }) {
-  const [activeTab, setActiveTab] = useState<'answer' | 'results' | 'sql' | 'chart' | 'insights' | 'lineage'>('answer')
-  const [copied, setCopied] = useState(false)
-
-  if (message.role === 'USER') {
-    return (
-      <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="flex justify-end">
-        <div className="bg-indigo-600 text-white font-medium px-4 py-3 rounded-2xl rounded-tr-sm max-w-xl text-sm leading-relaxed shadow-md shadow-indigo-600/10">
-          {message.content}
-        </div>
-      </motion.div>
-    )
-  }
-
-  // Parse raw JSON fallback if needed
-  let displayAnswer = message.content
+function parseFormattedAnswer(rawContent: string) {
+  let displayAnswer = rawContent
   if (displayAnswer.startsWith('```json') || displayAnswer.trim().startsWith('{')) {
     try {
       let rawText = displayAnswer.trim()
@@ -69,6 +56,28 @@ export function MessageBubble({ message }: { message: MessageItem }) {
       // Fallback
     }
   }
+  // Replace escaped \n and bold Markdown markers cleanly
+  return displayAnswer
+    .replace(/\\n/g, '\n')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+}
+
+export function MessageBubble({ message }: { message: MessageItem }) {
+  const [activeTab, setActiveTab] = useState<'answer' | 'results' | 'sql' | 'chart' | 'insights' | 'lineage'>('answer')
+  const [copied, setCopied] = useState(false)
+
+  if (message.role === 'USER') {
+    return (
+      <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} className="flex justify-end">
+        <div className="bg-indigo-600 text-white font-medium px-4 py-3 rounded-2xl rounded-tr-sm max-w-xl text-sm leading-relaxed shadow-md shadow-indigo-600/10 font-sans">
+          {message.content}
+        </div>
+      </motion.div>
+    )
+  }
+
+  const cleanAnswer = parseFormattedAnswer(message.content)
+  const isNoDbWarning = cleanAnswer.includes('no database is currently connected') || cleanAnswer.includes('need a database connection')
 
   const query = message.metadata?.query
   const queryResult = message.queryResult
@@ -94,12 +103,12 @@ export function MessageBubble({ message }: { message: MessageItem }) {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-3 w-full">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-3 w-full font-sans">
       <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
         <Sparkles size={15} className="text-indigo-400" />
       </div>
 
-      <div className="flex-1 min-w-0 bg-[#0D111A] border border-slate-800/80 rounded-2xl p-4 space-y-4">
+      <div className="flex-1 min-w-0 bg-[#0D111A] border border-slate-800/80 rounded-2xl p-4 space-y-4 shadow-xl">
         {/* Navigation Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
           <div className="flex flex-wrap items-center gap-1">
@@ -178,10 +187,36 @@ export function MessageBubble({ message }: { message: MessageItem }) {
           </div>
         </div>
 
-        {/* Tab 1: ANSWER */}
+        {/* Tab 1: ANSWER (Apple-inspired UX) */}
         {activeTab === 'answer' && (
-          <div className="text-sm text-slate-200 leading-relaxed space-y-3">
-            <div className="whitespace-pre-wrap">{displayAnswer}</div>
+          <div className="space-y-4">
+            {isNoDbWarning && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-sm text-white mb-1">No Database Connected</h4>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Connect your PostgreSQL, MySQL, or MongoDB database to query live records and visualize status trends.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/dashboard/databases/new"
+                  className="shrink-0 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-md shadow-amber-500/10"
+                >
+                  <Database size={13} />
+                  Connect DB
+                </Link>
+              </div>
+            )}
+
+            {/* Apple Card Output */}
+            <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800/80 backdrop-blur-md space-y-3">
+              <div className="text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
+                {cleanAnswer}
+              </div>
+            </div>
 
             {hasChart && (
               <div className="mt-4 pt-3 border-t border-slate-800/60">
