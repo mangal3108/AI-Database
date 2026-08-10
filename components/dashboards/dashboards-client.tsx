@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, BarChart3, Clock, LayoutGrid, X, Loader2, Sparkles } from 'lucide-react'
+import { Plus, BarChart3, Clock, LayoutGrid, X, Loader2, Sparkles, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -55,27 +55,28 @@ export function DashboardsClient({ initialDashboards }: { initialDashboards: Das
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div className="p-6 lg:p-10 max-w-6xl mx-auto font-sans space-y-8 text-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
-            <LayoutGrid className="text-indigo-400" size={26} />
-            <span>Dashboards</span>
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">Create and view interactive visual dashboards from saved database queries.</p>
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest mb-1">
+            <LayoutGrid size={13} />
+            <span>ANALYTICS WORKSPACE</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Executive Dashboards</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Combine saved queries, automated charts, and live database metrics into unified visual workspaces.</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-md shadow-indigo-600/20 shrink-0 cursor-pointer"
+          className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm shadow-indigo-600/20 shrink-0 cursor-pointer"
         >
-          <Plus size={16} />
+          <Plus size={15} />
           <span>New Dashboard</span>
         </button>
       </div>
 
       {dashboards.length === 0 ? (
-        <div className="bg-[#0D111A] border border-slate-800/80 rounded-3xl p-12 text-center max-w-md mx-auto my-12">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-[#111113] border border-white/5 rounded-3xl p-12 text-center max-w-md mx-auto my-12">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4">
             <BarChart3 size={24} />
           </div>
           <h3 className="text-base font-bold text-white">No dashboards created yet</h3>
@@ -84,93 +85,88 @@ export function DashboardsClient({ initialDashboards }: { initialDashboards: Das
           </p>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="mt-6 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all inline-flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/25"
+            className="mt-6 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all inline-flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-600/20"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             <span>Create Dashboard</span>
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {dashboards.map((d) => (
-            <div key={d.id} className="bg-[#0D111A] border border-slate-800/80 rounded-2xl p-5 hover:border-indigo-500/30 transition-all group">
-              <div className="flex items-center gap-2 mb-2">
-                <LayoutGrid size={16} className="text-indigo-400" />
-                <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">{d.name}</h3>
+            <Link
+              key={d.id}
+              href={`/dashboard/dashboards/${d.id}`}
+              className="bg-[#111113]/90 border border-white/5 rounded-2xl p-5 hover:border-white/10 hover:bg-[#141417] transition-all group flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                    <LayoutGrid size={15} />
+                  </div>
+                  <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">{d.name}</h3>
+                </div>
+                {d.description && <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{d.description}</p>}
               </div>
-              <p className="text-xs text-slate-400 line-clamp-2">{d.description || 'No description provided.'}</p>
-              <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+
+              <div className="mt-6 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-500">
                 <span className="flex items-center gap-1">
                   <Clock size={12} />
-                  <span>{mounted ? new Date(d.updatedAt).toLocaleDateString() : ''}</span>
+                  <span>Updated {new Date(d.updatedAt).toLocaleDateString()}</span>
                 </span>
-                <Link
-                  href={`/dashboard/dashboards/${d.id}`}
-                  className="text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer transition-colors"
-                >
-                  View Dashboard →
-                </Link>
+                <ChevronRight size={13} className="text-slate-500 group-hover:text-white transition-colors" />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
 
-      {/* Create Dashboard Modal */}
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0D111A] border border-slate-800 rounded-3xl w-full max-w-lg p-6 shadow-2xl relative">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors"
-            >
-              <X size={18} />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5">
-              <Sparkles className="text-indigo-400" size={20} />
-              <h2 className="text-lg font-bold text-white">Create Visual Dashboard</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111113] border border-white/10 rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="text-base font-bold text-white">Create Executive Dashboard</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X size={16} />
+              </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4 font-sans">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Dashboard Name</label>
+                <label className="block text-xs font-mono font-bold text-slate-400 uppercase mb-1.5">Dashboard Name</label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Executive KPI Overview, E-Commerce Metrics"
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Executive Overview Q3"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Description (Optional)</label>
+                <label className="block text-xs font-mono font-bold text-slate-400 uppercase mb-1.5">Description (Optional)</label>
                 <textarea
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Brief summary of charts and queries aggregated in this dashboard"
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Summary of KPIs and query widgets in this dashboard..."
                   rows={3}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none resize-none"
                 />
               </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-600/30 flex items-center gap-2"
+                  disabled={isLoading || !name.trim()}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2 rounded-xl transition-all shadow-md shadow-indigo-600/20 disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                  <span>{isLoading ? 'Creating...' : 'Create Dashboard'}</span>
+                  {isLoading ? <Loader2 size={14} className="animate-spin" /> : 'Create Dashboard'}
                 </button>
               </div>
             </form>
