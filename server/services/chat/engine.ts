@@ -139,18 +139,32 @@ export async function runChatEngine(opts: ChatEngineOptions): Promise<ChatEngine
     }
   }
 
-  // ── Step 3: RAG retrieval ─────────────────────────────────────────────────
-  streamCallback?.('Searching knowledge base...')
+  // ── Step 3: Token Budget & Complexity Classification ──────────────────────
+  const { classifyQueryComplexity, BUDGET_TIERS, pruneSchemaByQuestion, calculateTokenMetrics } = await import('../ai/token-optimization')
+  const complexity = classifyQueryComplexity(message)
+  const budget = BUDGET_TIERS[complexity]
 
-  const ragChunks = await retrieveRelevantChunks(
-    organizationId,
-    databaseConnectionId,
-    message,
-    6
-  )
-  const ragContext = buildRagContext(ragChunks)
+  // Prune schema context according to token budget
+  let prunedSchema = dbMetadata ? JSON.stringify(dbMetadata) : ''
+  if (dbMetadata) {
+    prunedSchema = pruneSchemaByQuestion(prunedSchema, message, complexity)
+  }
 
-  // ── Step 4: Build messages ────────────────────────────────────────────────
+  // ── Step 3.5: RAG retrieval ───────────────────────────────────────────────
+  let ragContext = ''
+  if (complexity !== 'CONVERSATIONAL') {
+    streamCallback?.('Searching knowledge base...')
+    const topK = complexity === 'SIMPLE' ? 3 : complexity === 'MEDIUM' ? 5 : 8
+    const ragChunks = await retrieveRelevantChunks(
+      organizationId,
+      databaseConnectionId,
+      message,
+      topK
+    )
+    ragContext = buildRagContext(ragChunks)
+  }
+
+  // ── Step 4: Build messages & trim context ──────────────────────────────────
   const systemPrompt = dbMetadata
     ? buildQuerySystemPrompt(
         dbMetadata,
@@ -173,9 +187,11 @@ RESPONSE FORMAT (JSON only):
   "sources": []
 }`
 
+  // Context-aware history trimming based on complexity tier budget
+  const maxHistoryCount = complexity === 'SIMPLE' ? 4 : complexity === 'MEDIUM' ? 6 : 10
   const conversationHistory = (conversation.messages ?? [])
     .filter(m => m.role !== 'SYSTEM')
-    .slice(-10) // Last 10 messages
+    .slice(-maxHistoryCount)
     .map(m => ({
       role: m.role.toLowerCase() as 'user' | 'assistant',
       content: m.content,
