@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { useRef, useState } from 'react'
@@ -8,38 +8,63 @@ import { SectionBackground } from './section-background'
 const FAQS = [
   {
     q: 'Is my database password safe?',
-    a: 'Yes. Credentials are encrypted with AES-256-GCM before storage. The encryption key is server-side only and never sent to the browser. Internite AI never logs passwords, connection strings, or API keys.',
+    a: 'Yes. Credentials are encrypted with AES-256-GCM before storage. The encryption key is server-side only and is never sent to the browser, logged, or included in AI prompts. Internite AI never stores passwords in plaintext, and connection strings are not visible in API responses. Connections are established server-side with TLS 1.3. You can revoke access at any time by removing the connection from your workspace.',
   },
   {
     q: 'Can the AI accidentally delete or modify my data?',
-    a: 'No. By default, Internite AI operates in read-only mode. The query safety engine blocks DROP, DELETE, UPDATE, INSERT, TRUNCATE, ALTER, GRANT, and other destructive operations before execution. Write access requires explicit administrator opt-in.',
+    a: 'No. By default, Internite AI operates in strict read-only mode. The query safety engine parses every generated SQL statement with an AST validator and blocks DROP, DELETE, UPDATE, INSERT, TRUNCATE, ALTER, GRANT, REVOKE, and other destructive or privilege-changing operations before they reach your database. Write access requires explicit administrator opt-in at the workspace level and is logged with full audit trails.',
   },
   {
     q: 'What databases does Internite AI support?',
-    a: 'PostgreSQL, MySQL, MongoDB, and SQL Server are fully supported. We are actively working on adding support for more databases including SQLite, Oracle, and BigQuery.',
+    a: 'PostgreSQL, MySQL, MongoDB, and SQL Server are fully supported with production-grade connection handling, schema indexing, and SQL dialect awareness. Supabase and Neon (PostgreSQL-compatible) work out of the box. We are actively adding support for SQLite, Oracle, BigQuery, ClickHouse, and CockroachDB. Each connector is tested against real production schemas, not toy examples.',
   },
   {
     q: 'How does the AI understand my database schema?',
-    a: 'Internite AI analyzes your database schema on connection, including table structures, relationships, and data types. This schema knowledge is used to generate accurate SQL queries that match your actual database.',
+    a: 'When you connect a database, Internite introspects your full schema: tables, columns, data types, indexes, foreign keys, and relationships. This metadata is embedded using semantic vector representations and stored in a private schema graph. When you ask a question, a Hybrid RAG retrieval step scores and selects only the most relevant tables for the AI context window — which also reduces token usage and improves accuracy. The schema is re-indexed automatically when your schema changes.',
   },
   {
-    q: 'Can I use my own OpenAI/Anthropic API key?',
-    a: 'Yes. Pro and Enterprise plans support Bring Your Own Key (BYOK). Use your own API keys for full control over costs and data processing. Your keys are encrypted and stored securely.',
+    q: 'Can I use my own OpenAI or Anthropic API key?',
+    a: 'Yes. Pro and Enterprise plans support Bring Your Own Key (BYOK). You can configure your OpenAI, Anthropic, or Gemini API key in workspace settings. Your key is encrypted at rest with AES-256-GCM and is used only during query generation. Using BYOK means Internite does not consume platform AI quota for your queries, giving you full cost control and model version flexibility.',
   },
   {
     q: 'How accurate are the generated SQL queries?',
-    a: 'Our AI achieves 95%+ query accuracy on standard database operations. The accuracy depends on query complexity and schema clarity. We continuously improve the model based on user feedback.',
+    a: 'Accuracy depends on the complexity of the question and the clarity of your schema naming. On well-structured databases with clear table and column names, Internite achieves over 95% query accuracy for standard analytical questions. For complex multi-join or window function queries, the AI explains its reasoning and shows the generated SQL so you can validate and refine it. We continuously improve the model based on anonymized accuracy feedback.',
+  },
+  {
+    q: 'What happens if I exceed my monthly query quota?',
+    a: 'On the Free tier, queries are paused when the 100-query monthly limit is reached. You can upgrade to Pro at any time to continue immediately. On Pro, if you exceed 5,000 queries, you can either upgrade to Enterprise, bring your own AI key for additional usage at cost, or wait for the next billing cycle. We never drop queries silently — you always receive a clear notification when approaching limits.',
+  },
+  {
+    q: 'Is Internite SOC 2 compliant?',
+    a: 'We are building toward SOC 2 compliance and follow its security principles in our architecture: tenant isolation, encrypted credential storage, audit logging, and access controls. We do not yet hold a formal SOC 2 Type II certification. Enterprise customers interested in our compliance roadmap and timeline can contact us at security@internite.online.',
   },
 ]
 
 export function FaqSection() {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map(faq => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.a,
+      },
+    })),
+  }
 
   return (
     <section className="py-24 px-6 relative overflow-hidden" ref={ref}>
-      {/* Minimal Background with blue tint */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+
       <SectionBackground theme="blue" opacity={0.5} />
 
       <div className="max-w-3xl mx-auto px-6 relative z-10">
@@ -48,12 +73,14 @@ export function FaqSection() {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           className="text-center mb-12"
         >
-          <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3 font-mono">
-            {'>'} FAQ
-          </p>
+          <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3 font-mono">FAQ</p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Frequently asked questions
           </h2>
+          <p className="text-slate-400 mt-3 text-sm max-w-lg mx-auto">
+            Can not find your answer?{' '}
+            <a href="mailto:hello@internite.online" className="text-cyan-400 hover:underline">Email us directly.</a>
+          </p>
         </motion.div>
 
         <motion.div
@@ -67,6 +94,7 @@ export function FaqSection() {
               <button
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
                 className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/30 transition-colors"
+                aria-expanded={openIndex === i}
               >
                 <span className="text-sm font-medium text-white pr-4">{faq.q}</span>
                 <ChevronDown
@@ -82,7 +110,7 @@ export function FaqSection() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 pb-4 text-sm text-slate-400 leading-relaxed border-t border-slate-800/50 pt-3">
+                    <div className="px-4 pb-5 text-sm text-slate-300 leading-relaxed border-t border-slate-800/50 pt-3">
                       {faq.a}
                     </div>
                   </motion.div>

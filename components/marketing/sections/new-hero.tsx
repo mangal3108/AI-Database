@@ -40,57 +40,62 @@ export function NewHero() {
               </span>
             </motion.h1>
 
-            {/* Subheadline */}
+            {/* Subheadline — outcome-first */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-base sm:text-lg text-slate-300 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed font-sans"
+              className="text-base sm:text-xl text-slate-300 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed font-sans"
             >
-              Connect PostgreSQL, MySQL, MongoDB, Supabase, and Neon. Ask questions in natural language, generate safe read-only SQL, and get instant charts & AI insights.
+              Connect your database. Ask questions in plain English.{' '}
+              <span className="text-white font-semibold">Get trustworthy answers, charts, and insights in seconds.</span>
             </motion.p>
 
-            {/* CTAs */}
+            {/* CTAs — exactly 2 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center gap-4 mb-12"
+              className="flex flex-col sm:flex-row items-center gap-4 mb-10"
             >
               <Link
                 href="/signup"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-8 py-4 rounded-xl transition-all shadow-lg shadow-indigo-600/30 hover:scale-105"
               >
-                Start Free
+                Start Free — No Credit Card
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                href="#demo"
+                href="#how-it-works"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-slate-200 font-medium px-8 py-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/60 backdrop-blur-sm transition-all"
               >
                 <Play className="w-4 h-4 text-cyan-400" />
-                See Terminal Demo
+                See It In Action
               </Link>
             </motion.div>
 
-            {/* Technical Status Indicators */}
+            {/* Trust indicators — benefit language */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs font-mono text-slate-400"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs font-medium text-slate-400"
             >
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span>Read-Only Sandbox</span>
+                <span>Read-only by default</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span>TLS 1.3 Encrypted</span>
+                <span>No data migration</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span>Zero Data Migration</span>
+                <span>Connect in minutes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-400" />
+                <span>100 free queries</span>
               </div>
             </motion.div>
           </div>
