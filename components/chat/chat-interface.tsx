@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Database, Loader2, Sparkles, Terminal, Command, TrendingUp, Users, Package, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Send, Database, Loader2, Sparkles, Terminal, TrendingUp, Users, Package, AlertTriangle, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 import { ChatHeader } from '@/components/chat/chat-header'
@@ -63,52 +63,6 @@ const PROMPT_SUGGESTIONS = [
   },
 ]
 
-// Mock schema data for demonstration
-const MOCK_TABLES = [
-  {
-    name: 'orders',
-    rowCount: 14280,
-    columns: [
-      { name: 'id', type: 'uuid', isPk: true },
-      { name: 'customer_id', type: 'uuid', isFk: true },
-      { name: 'total_amount', type: 'numeric' },
-      { name: 'status', type: 'varchar' },
-      { name: 'created_at', type: 'timestamp' },
-    ],
-  },
-  {
-    name: 'customers',
-    rowCount: 3820,
-    columns: [
-      { name: 'id', type: 'uuid', isPk: true },
-      { name: 'email', type: 'varchar' },
-      { name: 'name', type: 'varchar' },
-      { name: 'segment', type: 'varchar' },
-      { name: 'created_at', type: 'timestamp' },
-    ],
-  },
-  {
-    name: 'products',
-    rowCount: 450,
-    columns: [
-      { name: 'id', type: 'uuid', isPk: true },
-      { name: 'title', type: 'varchar' },
-      { name: 'price', type: 'numeric' },
-      { name: 'category', type: 'varchar' },
-    ],
-  },
-  {
-    name: 'payments',
-    rowCount: 12900,
-    columns: [
-      { name: 'id', type: 'uuid', isPk: true },
-      { name: 'order_id', type: 'uuid', isFk: true },
-      { name: 'method', type: 'varchar' },
-      { name: 'amount', type: 'numeric' },
-    ],
-  },
-]
-
 export function ChatInterface({
   conversationId,
   initialMessages = [],
@@ -144,6 +98,18 @@ export function ChatInterface({
 
   const databases = dbsData?.connections ?? []
   const connectedDbs = databases.filter(d => d.status === 'CONNECTED')
+
+  // Fetch real schema tables for selected database
+  const { data: schemaData, isLoading: isSchemaLoading } = useQuery({
+    queryKey: ['schema', selectedDb],
+    queryFn: async () => {
+      if (!selectedDb) return { tables: [] }
+      const res = await fetch(`/api/databases/${selectedDb}/schema`)
+      if (!res.ok) return { tables: [] }
+      return res.json() as Promise<{ tables: Array<{ name: string; rowCount?: number; columns: Array<{ name: string; type: string; isPk?: boolean; isFk?: boolean }> }> }>
+    },
+    enabled: Boolean(selectedDb),
+  })
 
   useEffect(() => {
     if (connectedDbs.length > 0 && !selectedDb) {
@@ -253,11 +219,7 @@ export function ChatInterface({
                   confidence: parsed.confidence,
                   sources: parsed.sources,
                   rowCount: parsed.queryResult?.rowCount,
-                  tablesUsed: ['orders', 'customers'],
-                  insights: [
-                    'Revenue grew steadily over the past quarter.',
-                    'Enterprise user segment contributed the highest percentage of sales.',
-                  ],
+                  tablesUsed: schemaData?.tables?.slice(0, 3).map(t => t.name) ?? [],
                 },
                 queryResult: parsed.queryResult,
                 executionError: parsed.executionError,
@@ -288,7 +250,8 @@ export function ChatInterface({
     }
   }
 
-  const activeDbName = connectedDbs.find(d => d.id === selectedDb)?.name ?? 'Production DB'
+  const activeDbName = connectedDbs.find(d => d.id === selectedDb)?.name ?? 'No Database Connected'
+  const activeDbTables = schemaData?.tables ?? []
 
   return (
     <div className="flex flex-col h-full bg-[#05070B] overflow-hidden text-slate-100 font-sans">
@@ -312,7 +275,7 @@ export function ChatInterface({
           <div className="w-64 shrink-0 hidden md:block h-full">
             <ChatSidebar
               connectedDbName={activeDbName}
-              tableCount={84}
+              tableCount={activeDbTables.length}
               onNewChat={() => { setMessages([]); setCurrentConvId(undefined) }}
             />
           </div>
@@ -438,7 +401,8 @@ export function ChatInterface({
           <div className="w-72 shrink-0 hidden lg:block h-full">
             <SchemaInspector
               selectedDbName={activeDbName}
-              tables={MOCK_TABLES}
+              tables={activeDbTables}
+              isLoading={isSchemaLoading}
               onInsertText={text => setInput(prev => (prev ? `${prev} ${text}` : text))}
             />
           </div>
