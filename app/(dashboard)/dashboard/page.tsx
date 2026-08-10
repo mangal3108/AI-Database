@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { Database, MessageSquare, BookmarkCheck, Zap, Plus, ArrowRight } from 'lucide-react'
+import { Database, MessageSquare, BookmarkCheck, Zap, Plus, ArrowRight, Sparkles, Check, ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -80,13 +80,52 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">
-          {greeting}, {firstName}.
-        </h1>
-        <p className="text-muted-foreground mt-1">Your data, at a glance.</p>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
+      {/* Welcome Banner */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-950 border border-indigo-500/20">
+        <div>
+          <h1 className="text-2xl font-black text-white tracking-tight">
+            {greeting}, {firstName}.
+          </h1>
+          <p className="text-sm text-slate-300 mt-1">Talk to your database in plain English. Get answers, SQL & charts instantly.</p>
+        </div>
+        <Link
+          href="/dashboard/chat"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-600/30"
+        >
+          <Sparkles size={16} />
+          Start AI Chat
+        </Link>
+      </div>
+
+      {/* 3-Step Onboarding Guide */}
+      <div className="bg-[#090D16] border border-slate-800 rounded-2xl p-6">
+        <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest mb-4">ONBOARDING PROGRESS</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`p-4 rounded-xl border ${data.connectionsCount > 0 ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-slate-900/60 border-slate-800'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-mono font-bold text-emerald-400">① CONNECT DATABASE</span>
+              {data.connectionsCount > 0 ? <Check size={16} className="text-emerald-400" /> : <Link href="/dashboard/databases/new" className="text-xs text-indigo-400 hover:underline">Connect →</Link>}
+            </div>
+            <p className="text-xs text-slate-300">Connect PostgreSQL, MySQL, MongoDB, Neon or Supabase.</p>
+          </div>
+
+          <div className={`p-4 rounded-xl border ${data.connectionsCount > 0 ? 'bg-indigo-950/30 border-indigo-500/30' : 'bg-slate-900/40 border-slate-800/60'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-mono font-bold text-indigo-400">② SCHEMA INDEXING</span>
+              <span className="text-[10px] font-mono text-slate-400">AUTOMATIC</span>
+            </div>
+            <p className="text-xs text-slate-300">Hybrid RAG indexes tables, fields and foreign key relations.</p>
+          </div>
+
+          <div className={`p-4 rounded-xl border ${data.conversationsCount > 0 ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-slate-900/40 border-slate-800/60'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-mono font-bold text-cyan-400">③ ASK AI QUESTIONS</span>
+              {data.conversationsCount > 0 ? <Check size={16} className="text-emerald-400" /> : <Link href="/dashboard/chat" className="text-xs text-cyan-400 hover:underline">Try Now →</Link>}
+            </div>
+            <p className="text-xs text-slate-300">Ask natural language questions & auto-generate charts.</p>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
@@ -308,13 +347,5 @@ function EmptyState({
         <span>{action.label}</span>
       </Link>
     </div>
-  )
-}
-
-function ChevronRight({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
   )
 }

@@ -25,19 +25,59 @@ import {
 import type { Session } from 'next-auth'
 import { WorkspaceSwitcher } from './workspace-switcher'
 
-import { CreditCard, Activity } from 'lucide-react'
+import { CreditCard, Activity, Code2, Key, Webhook } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', exact: true },
-  { href: '/dashboard/chat', icon: MessageSquare, label: 'AI Chat' },
-  { href: '/dashboard/visualizer', icon: TrendingUp, label: 'Visualizer' },
-  { href: '/dashboard/databases', icon: Database, label: 'Databases' },
-  { href: '/dashboard/queries', icon: BookmarkCheck, label: 'Saved Queries' },
-  { href: '/dashboard/dashboards', icon: BarChart3, label: 'Dashboards' },
-  { href: '/dashboard/knowledge', icon: BookOpen, label: 'Knowledge' },
-  { href: '/dashboard/billing', icon: CreditCard, label: 'Billing' },
-  { href: '/dashboard/usage', icon: Activity, label: 'Usage' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+interface NavItem {
+  href: string
+  icon: any
+  label: string
+  exact?: boolean
+  badge?: string
+}
+
+interface NavGroup {
+  title?: string
+  items: NavItem[]
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    items: [
+      { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', exact: true },
+    ],
+  },
+  {
+    title: 'WORKSPACE',
+    items: [
+      { href: '/dashboard/chat', icon: MessageSquare, label: 'AI Chat', badge: 'Hero' },
+      { href: '/dashboard/visualizer', icon: TrendingUp, label: 'Data Visualizer' },
+      { href: '/dashboard/dashboards', icon: BarChart3, label: 'Dashboards' },
+      { href: '/dashboard/queries', icon: BookmarkCheck, label: 'Saved Queries' },
+    ],
+  },
+  {
+    title: 'DATA',
+    items: [
+      { href: '/dashboard/databases', icon: Database, label: 'Databases' },
+      { href: '/dashboard/knowledge', icon: BookOpen, label: 'Knowledge / RAG' },
+    ],
+  },
+  {
+    title: 'DEVELOPER',
+    items: [
+      { href: '/developers/api', icon: Code2, label: 'API Reference' },
+      { href: '/settings/api-keys', icon: Key, label: 'API Keys' },
+      { href: '/settings/webhooks', icon: Webhook, label: 'Webhooks' },
+    ],
+  },
+  {
+    title: 'ACCOUNT',
+    items: [
+      { href: '/dashboard/usage', icon: Activity, label: 'Usage' },
+      { href: '/dashboard/billing', icon: CreditCard, label: 'Billing' },
+      { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+    ],
+  },
 ]
 
 interface DashboardSidebarProps {
@@ -100,28 +140,46 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-2">
-        <ul className="space-y-0.5">
-          {NAV_ITEMS.map((item) => {
-            const active = isActive(item.href, item.exact)
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-sidebar-accent text-sidebar-primary'
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                  } ${collapsed ? 'justify-center' : ''}`}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <item.icon size={16} className="flex-shrink-0" />
-                  {!collapsed && item.label}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+      <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-4">
+        {NAV_GROUPS.map((group, groupIdx) => (
+          <div key={groupIdx} className="space-y-1">
+            {group.title && !collapsed && (
+              <p className="px-3 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 mb-1">
+                {group.title}
+              </p>
+            )}
+            <ul className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = isActive(item.href, item.exact)
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                        active
+                          ? 'bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30'
+                          : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                      } ${collapsed ? 'justify-center' : ''}`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <item.icon size={16} className="flex-shrink-0" />
+                      {!collapsed && (
+                        <div className="flex items-center justify-between flex-1">
+                          <span>{item.label}</span>
+                          {item.badge && (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       {/* Bottom: Usage + User */}
