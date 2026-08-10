@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, Eye, EyeOff, Mail, Lock, Shield, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Mail, Lock, Shield, CheckCircle2, ArrowRight, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 const loginSchema = z.object({
@@ -20,6 +20,18 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get('error')
+
+  const errorMessage =
+    urlError === 'OAuthAccountNotLinked'
+      ? 'This email is already registered with a password. Please sign in with your email and password below.'
+      : urlError === 'Callback' || urlError === 'OAuthSignin'
+      ? 'There was a problem signing in with that provider. Please try again.'
+      : urlError
+      ? 'Sign in failed. Please try again.'
+      : null
+
   const [showPassword, setShowPassword] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isGithubLoading, setIsGithubLoading] = useState(false)
@@ -83,6 +95,14 @@ export function LoginForm() {
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Welcome back</h1>
           <p className="text-sm text-slate-400 mt-1.5 font-medium">Sign in to continue to your workspace</p>
         </div>
+
+        {/* Error banner */}
+        {errorMessage && (
+          <div className="flex items-start gap-2.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-4 py-3 mb-4">
+            <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-rose-300 leading-relaxed">{errorMessage}</p>
+          </div>
+        )}
 
         {/* Social Auth Buttons */}
         <div className="space-y-3 mb-6">
