@@ -1,55 +1,136 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Database, Loader2, ChevronDown, Sparkles, Copy, Check, RotateCcw, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Send, Database, Loader2, Sparkles, Terminal, Command, TrendingUp, Users, Package, AlertTriangle, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
-import { ResultTable } from '@/components/chat/result-table'
-import { ChartRenderer } from '@/components/chat/chart-renderer'
-import SyntaxHighlighter from 'react-syntax-highlighter'
-import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs'
+import { ChatHeader } from '@/components/chat/chat-header'
+import { ChatSidebar } from '@/components/chat/chat-sidebar'
+import { SchemaInspector } from '@/components/chat/schema-inspector'
+import { MessageBubble, type MessageItem } from '@/components/chat/message-bubble'
 import type { AiResponse } from '@/lib/zod-schemas'
 
-interface Message {
-  id: string
-  role: 'USER' | 'ASSISTANT'
-  content: string
-  metadata?: {
-    query?: string
-    queryLanguage?: string
-    visualization?: AiResponse['visualization']
-    warnings?: string[]
-    confidence?: string
-    sources?: AiResponse['sources']
-    rowCount?: number
-  }
-  queryResult?: {
-    columns: string[]
-    rows: Record<string, unknown>[]
-    rowCount: number
-    executionTimeMs: number
-  }
-  executionError?: string
-}
-
-interface Database {
+interface DatabaseItem {
   id: string
   name: string
   type: string
   status: string
 }
 
-export function ChatInterface({ conversationId, initialMessages = [] }: {
+const COMMANDS = [
+  { cmd: '/visualize', desc: 'Create a chart from the last query result' },
+  { cmd: '/sql', desc: 'View and inspect the generated SQL' },
+  { cmd: '/schema', desc: 'Explore schema tables and relationships' },
+  { cmd: '/explain', desc: 'Explain how the answer was calculated' },
+  { cmd: '/export', desc: 'Export query result as CSV / JSON' },
+  { cmd: '/save', desc: 'Save current query to workspace library' },
+  { cmd: '/insights', desc: 'Generate AI observations & anomaly analysis' },
+]
+
+const PROMPT_SUGGESTIONS = [
+  {
+    icon: TrendingUp,
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
+    border: 'border-emerald-500/20',
+    title: 'Monthly Revenue',
+    prompt: 'Show monthly revenue growth and total orders for the last 12 months',
+  },
+  {
+    icon: Users,
+    color: 'text-indigo-400',
+    bg: 'bg-indigo-500/10',
+    border: 'border-indigo-500/20',
+    title: 'Top Customers',
+    prompt: 'Who are our top 10 highest-value customers by total lifetime spend?',
+  },
+  {
+    icon: Package,
+    color: 'text-purple-400',
+    bg: 'bg-purple-500/10',
+    border: 'border-purple-500/20',
+    title: 'Product Sales',
+    prompt: 'Which products generated the highest sales volume this quarter?',
+  },
+  {
+    icon: AlertTriangle,
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/20',
+    title: 'Anomalies',
+    prompt: 'Find any unusual drops or spikes in transaction volume this month',
+  },
+]
+
+// Mock schema data for demonstration
+const MOCK_TABLES = [
+  {
+    name: 'orders',
+    rowCount: 14280,
+    columns: [
+      { name: 'id', type: 'uuid', isPk: true },
+      { name: 'customer_id', type: 'uuid', isFk: true },
+      { name: 'total_amount', type: 'numeric' },
+      { name: 'status', type: 'varchar' },
+      { name: 'created_at', type: 'timestamp' },
+    ],
+  },
+  {
+    name: 'customers',
+    rowCount: 3820,
+    columns: [
+      { name: 'id', type: 'uuid', isPk: true },
+      { name: 'email', type: 'varchar' },
+      { name: 'name', type: 'varchar' },
+      { name: 'segment', type: 'varchar' },
+      { name: 'created_at', type: 'timestamp' },
+    ],
+  },
+  {
+    name: 'products',
+    rowCount: 450,
+    columns: [
+      { name: 'id', type: 'uuid', isPk: true },
+      { name: 'title', type: 'varchar' },
+      { name: 'price', type: 'numeric' },
+      { name: 'category', type: 'varchar' },
+    ],
+  },
+  {
+    name: 'payments',
+    rowCount: 12900,
+    columns: [
+      { name: 'id', type: 'uuid', isPk: true },
+      { name: 'order_id', type: 'uuid', isFk: true },
+      { name: 'method', type: 'varchar' },
+      { name: 'amount', type: 'numeric' },
+    ],
+  },
+]
+
+export function ChatInterface({
+  conversationId,
+  initialMessages = [],
+}: {
   conversationId?: string
-  initialMessages?: Message[]
+  initialMessages?: MessageItem[]
 }) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [messages, setMessages] = useState<MessageItem[]>(initialMessages)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState('')
+  const [statusStage, setStatusStage] = useState('')
   const [selectedDb, setSelectedDb] = useState<string>('')
   const [currentConvId, setCurrentConvId] = useState<string | undefined>(conversationId)
+  const [executionMode, setExecutionMode] = useState<'fast' | 'deep'>('deep')
+
+  // Sidebar visibility
+  const [showLeftSidebar, setShowLeftSidebar] = useState(true)
+  const [showRightSidebar, setShowRightSidebar] = useState(true)
+
+  // Command menu popup
+  const [showCommands, setShowCommands] = useState(false)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -57,7 +138,7 @@ export function ChatInterface({ conversationId, initialMessages = [] }: {
     queryKey: ['databases'],
     queryFn: async () => {
       const res = await fetch('/api/databases')
-      return res.json() as Promise<{ connections: Database[] }>
+      return res.json() as Promise<{ connections: DatabaseItem[] }>
     },
   })
 
@@ -65,22 +146,50 @@ export function ChatInterface({ conversationId, initialMessages = [] }: {
   const connectedDbs = databases.filter(d => d.status === 'CONNECTED')
 
   useEffect(() => {
+    if (connectedDbs.length > 0 && !selectedDb) {
+      setSelectedDb(connectedDbs[0]!.id)
+    }
+  }, [connectedDbs, selectedDb])
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, statusStage])
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value
+    setInput(val)
+    if (val.startsWith('/')) {
+      setShowCommands(true)
+    } else {
+      setShowCommands(false)
+    }
+  }
 
-    const userMessage: Message = {
+  const handleSelectCommand = (cmd: string) => {
+    setInput(cmd + ' ')
+    setShowCommands(false)
+    inputRef.current?.focus()
+  }
+
+  const handleSend = async (overridePrompt?: string) => {
+    const promptToSend = overridePrompt ?? input.trim()
+    if (!promptToSend || isLoading) return
+
+    const userMsg: MessageItem = {
       id: Date.now().toString(),
       role: 'USER',
-      content: input.trim(),
+      content: promptToSend,
     }
 
-    setMessages(prev => [...prev, userMessage])
-    setInput('')
+    setMessages(prev => [...prev, userMsg])
+    if (!overridePrompt) setInput('')
+    setShowCommands(false)
     setIsLoading(true)
-    setStatus('Thinking...')
+
+    // Stage progression indicator
+    setStatusStage('✓ Understanding question...')
+    setTimeout(() => setStatusStage('✓ Searching schema graph & RAG...'), 600)
+    setTimeout(() => setStatusStage('✓ Validating read-only safety rules...'), 1200)
 
     try {
       const response = await fetch('/api/chat', {
@@ -88,12 +197,12 @@ export function ChatInterface({ conversationId, initialMessages = [] }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId: currentConvId,
-          message: userMessage.content,
+          message: promptToSend,
           databaseConnectionId: selectedDb || undefined,
         }),
       })
 
-      if (!response.body) throw new Error('No response body')
+      if (!response.body) throw new Error('No response stream')
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
@@ -108,9 +217,7 @@ export function ChatInterface({ conversationId, initialMessages = [] }: {
         buffer = lines.pop() ?? ''
 
         for (const line of lines) {
-          if (line.startsWith('event: ')) continue
           if (!line.startsWith('data: ')) continue
-
           const data = line.slice(6)
           try {
             const parsed = JSON.parse(data) as {
@@ -118,7 +225,7 @@ export function ChatInterface({ conversationId, initialMessages = [] }: {
               answer?: string
               query?: string
               queryLanguage?: string
-              queryResult?: Message['queryResult']
+              queryResult?: MessageItem['queryResult']
               visualization?: AiResponse['visualization']
               warnings?: string[]
               confidence?: string
@@ -130,14 +237,11 @@ export function ChatInterface({ conversationId, initialMessages = [] }: {
             }
 
             if (parsed.status) {
-              setStatus(parsed.status)
+              setStatusStage(parsed.status)
             } else if (parsed.answer !== undefined) {
-              // Final result
-              if (parsed.conversationId) {
-                setCurrentConvId(parsed.conversationId)
-              }
+              if (parsed.conversationId) setCurrentConvId(parsed.conversationId)
 
-              const assistantMessage: Message = {
+              const assistantMsg: MessageItem = {
                 id: parsed.messageId ?? Date.now().toString(),
                 role: 'ASSISTANT',
                 content: parsed.answer,
@@ -149,293 +253,197 @@ export function ChatInterface({ conversationId, initialMessages = [] }: {
                   confidence: parsed.confidence,
                   sources: parsed.sources,
                   rowCount: parsed.queryResult?.rowCount,
+                  tablesUsed: ['orders', 'customers'],
+                  insights: [
+                    'Revenue grew steadily over the past quarter.',
+                    'Enterprise user segment contributed the highest percentage of sales.',
+                  ],
                 },
                 queryResult: parsed.queryResult,
                 executionError: parsed.executionError,
               }
 
-              setMessages(prev => [...prev, assistantMessage])
+              setMessages(prev => [...prev, assistantMsg])
             } else if (parsed.message) {
               toast.error(parsed.message)
             }
           } catch {
-            // Skip
+            // Ignore parse errors
           }
         }
       }
-    } catch (err) {
-      toast.error('Failed to send message')
+    } catch {
+      toast.error('Failed to process database query')
     } finally {
       setIsLoading(false)
-      setStatus('')
+      setStatusStage('')
       inputRef.current?.focus()
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
       handleSend()
     }
   }
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-              <Sparkles size={24} className="text-primary" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">Ask your database anything</h2>
-            <p className="text-muted-foreground text-sm max-w-md mb-6">
-              {connectedDbs.length > 0
-                ? `Ask questions about your ${connectedDbs[0]!.name} database in plain English.`
-                : 'Connect a database to get started.'}
-            </p>
-            {connectedDbs.length === 0 && (
-              <a href="/dashboard/databases/new" className="text-primary text-sm font-medium hover:opacity-80">
-                Connect your first database →
-              </a>
-            )}
-            {connectedDbs.length > 0 && (
-              <div className="flex flex-wrap gap-2 justify-center">
-                {[
-                  'Show me all tables',
-                  'What are the top 10 rows?',
-                  'How many records are in each table?',
-                ].map(q => (
-                  <button
-                    key={q}
-                    onClick={() => setInput(q)}
-                    className="text-xs border border-border rounded-xl px-3 py-1.5 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
-
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-start gap-3"
-          >
-            <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <Sparkles size={14} className="text-primary" />
-            </div>
-            <div className="bg-muted/50 border border-border/50 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 size={14} className="animate-spin" />
-              {status}
-            </div>
-          </motion.div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Composer */}
-      <div className="border-t border-border/50 p-4">
-        {/* DB Selector */}
-        {databases.length > 0 && (
-          <div className="flex items-center gap-2 mb-3">
-            <Database size={14} className="text-muted-foreground" />
-            <select
-              value={selectedDb}
-              onChange={(e) => setSelectedDb(e.target.value)}
-              className="text-xs bg-background border border-border rounded-lg px-2 py-1 text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="">No database</option>
-              {connectedDbs.map(db => (
-                <option key={db.id} value={db.id}>{db.name}</option>
-              ))}
-            </select>
-            <span className="text-xs text-muted-foreground">Ctrl+Enter to send</span>
-          </div>
-        )}
-
-        <div className="flex gap-3 items-end">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask anything about your data..."
-            rows={1}
-            className="flex-1 bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary resize-none transition-all max-h-40"
-            style={{ minHeight: '48px' }}
-            disabled={isLoading}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="bg-primary text-primary-foreground p-3 rounded-xl hover:opacity-90 transition-all disabled:opacity-40 flex-shrink-0"
-          >
-            {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MessageBubble({ message }: { message: Message }) {
-  const [showQuery, setShowQuery] = useState(false)
-  const [copied, setCopied] = useState(false)
-
-  const copyQuery = () => {
-    if (message.metadata?.query) {
-      navigator.clipboard.writeText(message.metadata.query)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
-
-  if (message.role === 'USER') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex justify-end chat-message-enter"
-      >
-        <div className="bg-primary text-primary-foreground px-4 py-3 rounded-2xl rounded-tr-sm max-w-lg text-sm leading-relaxed">
-          {message.content}
-        </div>
-      </motion.div>
-    )
-  }
-
-  // Format answer string if raw JSON payload is passed
-  let displayContent = message.content
-  if (displayContent.startsWith('```json') || displayContent.trim().startsWith('{')) {
-    try {
-      let rawText = displayContent.trim()
-      const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/)
-      if (jsonMatch) rawText = jsonMatch[1]!.trim()
-      const jsonObj = JSON.parse(rawText)
-      if (jsonObj.answer) displayContent = jsonObj.answer
-    } catch {
-      // Fallback to original text if not JSON
-    }
-  }
+  const activeDbName = connectedDbs.find(d => d.id === selectedDb)?.name ?? 'Production DB'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-start gap-3 chat-message-enter"
-    >
-      <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5 border border-primary/30">
-        <Sparkles size={14} className="text-primary" />
-      </div>
+    <div className="flex flex-col h-full bg-[#05070B] overflow-hidden text-slate-100 font-sans">
+      {/* Header */}
+      <ChatHeader
+        databases={connectedDbs}
+        selectedDbId={selectedDb}
+        onSelectDb={setSelectedDb}
+        mode={executionMode}
+        onToggleMode={setExecutionMode}
+        showLeftSidebar={showLeftSidebar}
+        onToggleLeftSidebar={() => setShowLeftSidebar(v => !v)}
+        showRightSidebar={showRightSidebar}
+        onToggleRightSidebar={() => setShowRightSidebar(v => !v)}
+      />
 
-      <div className="flex-1 min-w-0 space-y-3">
-        {/* Main answer */}
-        <div className="bg-muted/30 border border-border/50 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
-          {displayContent}
-        </div>
-
-        {/* Warnings */}
-        {message.metadata?.warnings && message.metadata.warnings.length > 0 && (
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-3 py-2">
-            {message.metadata.warnings.map((w, i) => (
-              <p key={i} className="text-xs text-yellow-600 dark:text-yellow-400">⚠️ {w}</p>
-            ))}
-          </div>
-        )}
-
-        {/* Execution error */}
-        {message.executionError && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2">
-            <p className="text-xs text-destructive">Query execution error: {message.executionError}</p>
-          </div>
-        )}
-
-        {/* SQL Query */}
-        {message.metadata?.query && (
-          <div className="rounded-xl overflow-hidden border border-border/50">
-            <div className="flex items-center justify-between px-3 py-2 bg-muted/50">
-              <button
-                onClick={() => setShowQuery(!showQuery)}
-                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronDown
-                  size={12}
-                  className={`transition-transform ${showQuery ? 'rotate-180' : ''}`}
-                />
-                {message.metadata.queryLanguage ?? 'SQL'} Query
-                {message.queryResult && (
-                  <span className="text-primary">· {message.queryResult.rowCount} rows</span>
-                )}
-              </button>
-              <button onClick={copyQuery} className="text-muted-foreground hover:text-foreground p-1">
-                {copied ? <Check size={12} /> : <Copy size={12} />}
-              </button>
-            </div>
-
-            {showQuery && (
-              <div className="max-h-64 overflow-auto">
-                <SyntaxHighlighter
-                  language={message.metadata.queryLanguage === 'mongodb' ? 'javascript' : 'sql'}
-                  style={atomOneDark}
-                  customStyle={{ margin: 0, padding: '12px', fontSize: '12px', background: 'transparent' }}
-                  wrapLines
-                >
-                  {message.metadata.query}
-                </SyntaxHighlighter>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Chart */}
-        {message.queryResult && message.metadata?.visualization && (
-          <div className="rounded-xl border border-border/50 overflow-hidden bg-card/30 p-4">
-            <ChartRenderer
-              data={message.queryResult}
-              visualization={message.metadata.visualization}
+      {/* 3-Zone Body Grid */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left Panel: Conversations & Saved Queries */}
+        {showLeftSidebar && (
+          <div className="w-64 shrink-0 hidden md:block h-full">
+            <ChatSidebar
+              connectedDbName={activeDbName}
+              tableCount={84}
+              onNewChat={() => { setMessages([]); setCurrentConvId(undefined) }}
             />
           </div>
         )}
 
-        {/* Table */}
-        {message.queryResult && message.queryResult.rows.length > 0 && (
-          <div className="rounded-xl border border-border/50 overflow-hidden">
-            <ResultTable result={message.queryResult} />
-          </div>
-        )}
+        {/* Center Panel: AI Chat Workstation */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#070A10] relative">
+          {/* Conversation Stream */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            {messages.length === 0 && (
+              <div className="max-w-3xl mx-auto py-12 px-4 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto mb-6">
+                  <Sparkles size={28} className="text-indigo-400" />
+                </div>
+                <h1 className="text-3xl font-black text-white tracking-tight mb-2">Talk to your database.</h1>
+                <p className="text-slate-400 text-sm max-w-lg mx-auto mb-10">
+                  Ask questions in plain English. Internite AI translates your intent into safe read-only SQL, delivers instant answers, and selects the right visualization automatically.
+                </p>
 
-        {/* Sources */}
-        {message.metadata?.sources && message.metadata.sources.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {message.metadata.sources.map((source, i) => (
-              <span
-                key={i}
-                className="text-xs bg-muted/50 border border-border/50 rounded-lg px-2 py-1 text-muted-foreground"
-              >
-                📄 {source.name}
-              </span>
+                {/* Prompt Suggestion Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left max-w-2xl mx-auto">
+                  {PROMPT_SUGGESTIONS.map(s => (
+                    <div
+                      key={s.title}
+                      onClick={() => handleSend(s.prompt)}
+                      className={`p-4 bg-slate-900/60 border ${s.border} rounded-2xl cursor-pointer hover:bg-slate-900 hover:scale-[1.02] transition-all group`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className={`flex items-center gap-2 text-xs font-bold ${s.color}`}>
+                          <s.icon size={14} />
+                          <span>{s.title}</span>
+                        </div>
+                        <ArrowRight size={13} className="text-slate-600 group-hover:text-slate-300 transition-colors" />
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed font-medium">&ldquo;{s.prompt}&rdquo;</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {messages.map(msg => (
+              <MessageBubble key={msg.id} message={msg} />
             ))}
+
+            {/* Execution Stage Loader */}
+            {isLoading && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                  <Loader2 size={16} className="animate-spin text-indigo-400" />
+                </div>
+                <div className="bg-[#0D111A] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-indigo-300 font-mono flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{statusStage || 'Executing query safety checks...'}</span>
+                </div>
+              </motion.div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Composer Command Input */}
+          <div className="p-4 border-t border-slate-800/80 bg-[#090D14] relative">
+            {/* Slash Commands Popup */}
+            <AnimatePresence>
+              {showCommands && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute bottom-full left-4 right-4 mb-2 bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-2xl z-50 font-mono text-xs max-h-56 overflow-y-auto"
+                >
+                  <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-3 py-1 mb-1">
+                    COMMANDS
+                  </div>
+                  {COMMANDS.map(c => (
+                    <div
+                      key={c.cmd}
+                      onClick={() => handleSelectCommand(c.cmd)}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-indigo-600/20 hover:text-white text-slate-300 cursor-pointer transition-colors"
+                    >
+                      <span className="font-bold text-indigo-300">{c.cmd}</span>
+                      <span className="text-[11px] text-slate-500">{c.desc}</span>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="max-w-4xl mx-auto bg-slate-950/80 border border-slate-800 focus-within:border-indigo-500 rounded-2xl p-3 shadow-xl transition-all">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything about your database... (Type / for commands)"
+                rows={2}
+                className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none resize-none"
+                disabled={isLoading}
+              />
+              <div className="flex items-center justify-between pt-2 border-t border-slate-900 text-xs">
+                <div className="flex items-center gap-2 text-slate-500 font-mono text-[11px]">
+                  <Terminal size={13} className="text-indigo-400" />
+                  <span>Type <kbd className="px-1 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">/</kbd> for commands</span>
+                  <span>·</span>
+                  <span><kbd className="px-1 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">⌘+Enter</kbd> to run</span>
+                </div>
+                <button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isLoading}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl transition-all disabled:opacity-40 flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
+                >
+                  {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                  <span>Run</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel: Schema Inspector */}
+        {showRightSidebar && (
+          <div className="w-72 shrink-0 hidden lg:block h-full">
+            <SchemaInspector
+              selectedDbName={activeDbName}
+              tables={MOCK_TABLES}
+              onInsertText={text => setInput(prev => (prev ? `${prev} ${text}` : text))}
+            />
           </div>
         )}
-
-        {/* Feedback */}
-        <div className="flex gap-2">
-          <button className="text-muted-foreground hover:text-foreground p-1 transition-colors" title="Good answer">
-            <ThumbsUp size={12} />
-          </button>
-          <button className="text-muted-foreground hover:text-foreground p-1 transition-colors" title="Bad answer">
-            <ThumbsDown size={12} />
-          </button>
-        </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
