@@ -66,8 +66,8 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'DEVELOPER',
     items: [
       { href: '/developers/api', icon: Code2, label: 'API Reference' },
-      { href: '/settings/api-keys', icon: Key, label: 'API Keys' },
-      { href: '/settings/webhooks', icon: Webhook, label: 'Webhooks' },
+      { href: '/dashboard/settings/api-keys', icon: Key, label: 'API Keys' },
+      { href: '/dashboard/settings/webhooks', icon: Webhook, label: 'Webhooks' },
     ],
   },
   {
