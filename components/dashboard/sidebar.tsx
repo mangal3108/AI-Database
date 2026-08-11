@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -86,6 +86,30 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
   const limitQueries = usageData?.limit ?? 100
   const usagePercentage = Math.min(Math.round((usedQueries / limitQueries) * 100), 100)
 
+  // Fetch real subscription plan
+  const { data: billingData } = useQuery({
+    queryKey: ['sidebarPlan'],
+    queryFn: async () => {
+      const res = await fetch('/api/billing')
+      if (!res.ok) return { planName: 'Free', planSlug: 'free' }
+      const data = await res.json()
+      const planName = data?.subscription?.plan?.name ?? 'Free'
+      const planSlug = data?.subscription?.plan?.slug ?? 'free'
+      return { planName, planSlug }
+    },
+    staleTime: 60000,
+  })
+
+  const planName = billingData?.planName ?? 'Free'
+  const planSlug = billingData?.planSlug ?? 'free'
+
+  const planBadgeColor =
+    planSlug === 'pro' || planSlug === 'business'
+      ? 'text-indigo-400'
+      : planSlug === 'starter'
+      ? 'text-emerald-400'
+      : 'text-slate-500'
+
   const sidebarContent = (
     <div className="flex flex-col h-full font-sans text-xs select-none bg-[#09090B] border-r border-white/5">
       {/* Brand & Workspace Header */}
@@ -118,7 +142,9 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
               <p className="text-xs font-semibold text-slate-200 truncate">
                 {user?.name ? `${user.name}'s Workspace` : 'My Workspace'}
               </p>
-              <p className="text-[9px] text-slate-500 uppercase tracking-wider font-mono">PRO PLAN</p>
+              <p className={`text-[9px] uppercase tracking-wider font-mono ${planBadgeColor}`}>
+                {planName} PLAN
+              </p>
             </div>
           )}
           {!collapsed && <ChevronDown size={13} className="text-slate-500" />}
@@ -178,7 +204,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] font-medium text-slate-300">AI Queries</span>
               <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
-                PRO
+                {planName.toUpperCase()}
               </span>
             </div>
             <div className="h-1 bg-white/5 rounded-full overflow-hidden mb-1">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { createConnector } from '@/server/connectors/registry'
 import { createConnectionSchema } from '@/lib/zod-schemas'
+import { encrypt } from '@/lib/crypto'
 import { getTenantContext } from '@/server/services/auth/tenant-context'
 
 /**
@@ -122,8 +123,9 @@ export async function POST(req: NextRequest) {
   const { type, credentials } = parsed.data
 
   try {
-    // Encrypt credentials temporarily for connector factory
-    const tempConnector = createConnector(type as any, JSON.stringify(credentials))
+    // createConnector always calls decrypt() internally — so we must encrypt first
+    const encryptedCredentials = encrypt(JSON.stringify(credentials))
+    const tempConnector = createConnector(type as any, encryptedCredentials)
     await tempConnector.connect()
 
     const testResult = await tempConnector.testConnection()

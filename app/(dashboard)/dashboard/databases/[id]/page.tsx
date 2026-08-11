@@ -1,9 +1,10 @@
-﻿import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Database, ShieldCheck, Table2, Layers, CheckCircle2, AlertCircle, ArrowLeft, RefreshCw, Key } from 'lucide-react'
+import { Database, ShieldCheck, Table2, Layers, CheckCircle2, AlertCircle, ArrowLeft, RefreshCw, Key, AlertTriangle } from 'lucide-react'
 import { ConnectionDoctor } from '@/components/database/connection-doctor'
+import { RetestConnectionButton } from '@/components/database/retest-button'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -92,12 +93,32 @@ export default async function DatabaseDetailPage({
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-[#111113] border border-white/5 rounded-2xl p-5">
+        <div className={`bg-[#111113] border rounded-2xl p-5 ${
+          connection.status === 'ERROR' ? 'border-red-500/30' : 'border-white/5'
+        }`}>
           <p className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">Status</p>
           <div className="flex items-center gap-2 mt-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-bold text-white text-sm">{connection.status}</span>
+            <span className={`w-2.5 h-2.5 rounded-full ${
+              connection.status === 'CONNECTED' ? 'bg-emerald-400 animate-pulse' :
+              connection.status === 'ERROR'     ? 'bg-red-400' :
+              connection.status === 'INDEXING'  ? 'bg-yellow-400 animate-pulse' :
+                                                  'bg-slate-400'
+            }`} />
+            <span className={`font-bold text-sm ${
+              connection.status === 'CONNECTED' ? 'text-emerald-400' :
+              connection.status === 'ERROR'     ? 'text-red-400' :
+              connection.status === 'INDEXING'  ? 'text-yellow-400' :
+                                                  'text-white'
+            }`}>{connection.status}</span>
           </div>
+          {connection.status === 'ERROR' && connection.lastErrorMessage && (
+            <p className="text-[10px] text-red-400/70 mt-1.5 font-mono leading-relaxed line-clamp-3">
+              {connection.lastErrorMessage}
+            </p>
+          )}
+          {connection.status === 'ERROR' && (
+            <RetestConnectionButton connectionId={connection.id} />
+          )}
         </div>
 
         <div className="bg-[#111113] border border-white/5 rounded-2xl p-5">

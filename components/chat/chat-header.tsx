@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-import { Database, Zap, Brain, PanelLeft, PanelRight, Shield, Activity, RefreshCw } from 'lucide-react'
+import { Database, Zap, Brain, PanelLeft, PanelRight, RefreshCw } from 'lucide-react'
 
 interface ChatHeaderProps {
   databases?: { id: string; name: string; type: string; status: string }[]
@@ -64,18 +64,8 @@ export function ChatHeader({
         </div>
       </div>
 
-      {/* Center status pills */}
-      <div className="hidden md:flex items-center gap-4 text-[11px] text-slate-400">
-        <div className="flex items-center gap-1.5">
-          <Shield size={12} className="text-emerald-400" />
-          <span className="font-mono text-slate-300">READ-ONLY</span>
-        </div>
-        <span className="text-slate-700">•</span>
-        <div className="flex items-center gap-1.5">
-          <Activity size={12} className="text-indigo-400" />
-          <span className="font-mono text-slate-300">HYBRID RAG</span>
-        </div>
-      </div>
+
+
 
       {/* Right controls */}
       <div className="flex items-center gap-3">

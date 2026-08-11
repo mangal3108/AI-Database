@@ -183,15 +183,19 @@ async function testAndIntrospect(
       }
     }
 
-    // Index schema for RAG
-    const schemaContext = buildSchemaContext(metadata)
-    await indexDatabaseSchema(organizationId, connectionId, schemaContext)
+    // Index schema for RAG (non-fatal — don't fail connection if RAG indexing fails)
+    try {
+      const schemaContext = buildSchemaContext(metadata)
+      await indexDatabaseSchema(organizationId, connectionId, schemaContext)
+    } catch (ragErr) {
+      console.warn('[RAG Indexing Warning] Failed to index schema for RAG, but connection is still valid:', ragErr)
+    }
 
     await connector.disconnect()
 
     await prisma.databaseConnection.update({
       where: { id: connectionId },
-      data: { status: 'CONNECTED', lastTestedAt: new Date() },
+      data: { status: 'CONNECTED', lastTestedAt: new Date(), lastErrorMessage: null },
     })
   } catch (err) {
     await prisma.databaseConnection.update({
