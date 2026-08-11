@@ -260,7 +260,7 @@ export function ChatInterface({
   const activeDbTables = schemaData?.tables ?? []
 
   return (
-    <div className="flex flex-col h-full bg-[#05070B] overflow-hidden text-slate-100 font-sans">
+    <div className="flex flex-col h-full bg-white overflow-hidden text-slate-900 font-sans">
       {/* Header */}
       <ChatHeader
         databases={connectedDbs}
@@ -288,16 +288,16 @@ export function ChatInterface({
         )}
 
         {/* Center Panel: AI Chat Workstation */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#070A10] relative">
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
           {/* Conversation Stream */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
             {messages.length === 0 && (
               <div className="max-w-3xl mx-auto py-12 px-4 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto mb-6">
-                  <Sparkles size={28} className="text-indigo-400" />
+                <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto mb-6">
+                  <Sparkles size={28} className="text-indigo-600" />
                 </div>
-                <h1 className="text-3xl font-black text-white tracking-tight mb-2">Talk to your database.</h1>
-                <p className="text-slate-400 text-sm max-w-lg mx-auto mb-10">
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Talk to your database.</h1>
+                <p className="text-slate-500 text-sm max-w-lg mx-auto mb-10">
                   Ask questions in plain English. Internite AI translates your intent into safe read-only SQL, delivers instant answers, and selects the right visualization automatically.
                 </p>
 
@@ -307,16 +307,16 @@ export function ChatInterface({
                     <div
                       key={s.title}
                       onClick={() => handleSend(s.prompt)}
-                      className={`p-4 bg-slate-900/60 border ${s.border} rounded-2xl cursor-pointer hover:bg-slate-900 hover:scale-[1.02] transition-all group`}
+                      className="p-4 bg-white border border-slate-200 shadow-sm rounded-2xl cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div className={`flex items-center gap-2 text-xs font-bold ${s.color}`}>
+                        <div className={`flex items-center gap-2 text-xs font-bold ${s.color.replace('400', '600')}`}>
                           <s.icon size={14} />
-                          <span>{s.title}</span>
+                          <span className="text-slate-900">{s.title}</span>
                         </div>
-                        <ArrowRight size={13} className="text-slate-600 group-hover:text-slate-300 transition-colors" />
+                        <ArrowRight size={13} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed font-medium">&ldquo;{s.prompt}&rdquo;</p>
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">&ldquo;{s.prompt}&rdquo;</p>
                     </div>
                   ))}
                 </div>
@@ -344,7 +344,7 @@ export function ChatInterface({
           </div>
 
           {/* Composer Command Input */}
-          <div className="p-4 border-t border-slate-800/80 bg-[#090D14] relative">
+          <div className="p-4 bg-white relative">
             {/* Slash Commands Popup */}
             <AnimatePresence>
               {showCommands && (
@@ -352,18 +352,18 @@ export function ChatInterface({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute bottom-full left-4 right-4 mb-2 bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-2xl z-50 font-mono text-xs max-h-56 overflow-y-auto"
+                  className="absolute bottom-full left-4 right-4 mb-2 bg-white border border-slate-200 rounded-2xl p-2 shadow-xl z-50 font-mono text-xs max-h-56 overflow-y-auto"
                 >
-                  <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-3 py-1 mb-1">
+                  <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest px-3 py-1 mb-1">
                     COMMANDS
                   </div>
                   {COMMANDS.map(c => (
                     <div
                       key={c.cmd}
                       onClick={() => handleSelectCommand(c.cmd)}
-                      className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-indigo-600/20 hover:text-white text-slate-300 cursor-pointer transition-colors"
+                      className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-indigo-50 text-slate-700 cursor-pointer transition-colors"
                     >
-                      <span className="font-bold text-indigo-300">{c.cmd}</span>
+                      <span className="font-bold text-indigo-600">{c.cmd}</span>
                       <span className="text-[11px] text-slate-500">{c.desc}</span>
                     </div>
                   ))}
@@ -371,7 +371,7 @@ export function ChatInterface({
               )}
             </AnimatePresence>
 
-            <div className="max-w-4xl mx-auto bg-slate-950/80 border border-slate-800 focus-within:border-indigo-500 rounded-2xl p-3 shadow-xl transition-all">
+            <div className="max-w-4xl mx-auto bg-white border border-slate-200 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 rounded-2xl p-3 shadow-sm transition-all">
               <textarea
                 ref={inputRef}
                 value={input}
@@ -379,20 +379,20 @@ export function ChatInterface({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything about your database... (Type / for commands)"
                 rows={2}
-                className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none resize-none"
+                className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none resize-none"
                 disabled={isLoading}
               />
-              <div className="flex items-center justify-between pt-2 border-t border-slate-900 text-xs">
-                <div className="flex items-center gap-2 text-slate-500 font-mono text-[11px]">
-                  <Terminal size={13} className="text-indigo-400" />
-                  <span>Type <kbd className="px-1 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">/</kbd> for commands</span>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs mt-1">
+                <div className="flex items-center gap-2 text-slate-400 font-mono text-[11px]">
+                  <Terminal size={13} className="text-indigo-500" />
+                  <span>Type <kbd className="px-1 py-0.5 bg-slate-50 rounded border border-slate-200 text-slate-500">/</kbd> for commands</span>
                   <span>·</span>
-                  <span><kbd className="px-1 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-400">⌘+Enter</kbd> to run</span>
+                  <span><kbd className="px-1 py-0.5 bg-slate-50 rounded border border-slate-200 text-slate-500">⌘+Enter</kbd> to run</span>
                 </div>
                 <button
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isLoading}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl transition-all disabled:opacity-40 flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl transition-all disabled:opacity-40 disabled:bg-slate-200 disabled:text-slate-500 flex items-center gap-1.5 shadow-sm"
                 >
                   {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                   <span>Run</span>

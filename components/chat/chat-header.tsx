@@ -28,13 +28,13 @@ export function ChatHeader({
   const currentDb = databases.find(d => d.id === selectedDbId) ?? databases[0]
 
   return (
-    <div className="h-14 px-4 bg-[#090D14] border-b border-slate-800/80 flex items-center justify-between font-sans text-xs shrink-0 select-none">
+    <div className="h-14 px-4 bg-white border-b border-slate-200 flex items-center justify-between font-sans text-xs shrink-0 select-none">
       {/* Left controls */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleLeftSidebar}
           className={`p-1.5 rounded-lg border transition-colors ${
-            showLeftSidebar ? 'bg-slate-800 border-slate-700 text-white' : 'border-slate-800 text-slate-400 hover:text-white'
+            showLeftSidebar ? 'bg-slate-100 border-slate-200 text-slate-900' : 'border-slate-200 text-slate-400 hover:text-slate-600'
           }`}
           title="Toggle Sidebar"
         >
@@ -42,16 +42,16 @@ export function ChatHeader({
         </button>
 
         {/* Database selector dropdown */}
-        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-200">
-          <Database size={14} className="text-indigo-400 shrink-0" />
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-3 py-1.5 text-slate-900 shadow-sm">
+          <Database size={14} className="text-indigo-600 shrink-0" />
           <select
             value={selectedDbId}
             onChange={e => onSelectDb?.(e.target.value)}
-            className="bg-transparent text-xs font-bold text-white outline-none cursor-pointer pr-1"
+            className="bg-transparent text-xs font-bold text-slate-900 outline-none cursor-pointer pr-1"
           >
-            <option value="" className="bg-slate-900 text-slate-300">Select Database...</option>
+            <option value="" className="bg-white text-slate-500">Select Database...</option>
             {databases.map(db => (
-              <option key={db.id} value={db.id} className="bg-slate-900 text-white">
+              <option key={db.id} value={db.id} className="bg-white text-slate-900">
                 {db.status === 'CONNECTED' ? '●' : db.status === 'ERROR' ? '⚠' : '○'} {db.name} ({db.type})
               </option>
             ))}
@@ -59,10 +59,10 @@ export function ChatHeader({
           {currentDb && (
             <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
               currentDb.status === 'CONNECTED'
-                ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                ? 'text-emerald-600 bg-emerald-50 border-emerald-200 font-bold'
                 : currentDb.status === 'ERROR'
-                ? 'text-red-400 bg-red-500/10 border-red-500/20'
-                : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                ? 'text-red-600 bg-red-50 border-red-200 font-bold'
+                : 'text-amber-600 bg-amber-50 border-amber-200 font-bold'
             }`}>
               {currentDb.status === 'CONNECTED' ? 'READY' : currentDb.status}
             </span>
@@ -77,25 +77,25 @@ export function ChatHeader({
       {/* Right controls */}
       <div className="flex items-center gap-3">
         {/* Fast vs Deep Mode Toggle */}
-        <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 gap-1">
+        <div className="flex items-center bg-slate-100 border border-slate-200 rounded-full p-1 gap-1">
           <button
             onClick={() => onToggleMode?.('fast')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold text-[11px] transition-all ${
+            className={`flex items-center gap-1 px-3 py-1 rounded-full font-semibold text-[11px] transition-all ${
               mode === 'fast'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white text-slate-900 border border-slate-200 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
             title="Fast Mode: Instant response for straightforward questions"
           >
-            <Zap size={12} className={mode === 'fast' ? 'text-amber-400' : ''} />
+            <Zap size={12} className={mode === 'fast' ? 'text-amber-500' : ''} />
             <span>Fast</span>
           </button>
           <button
             onClick={() => onToggleMode?.('deep')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold text-[11px] transition-all ${
+            className={`flex items-center gap-1 px-3 py-1 rounded-full font-semibold text-[11px] transition-all ${
               mode === 'deep'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
             title="Deep Mode: Multi-table graph reasoning + RAG context"
           >
@@ -107,7 +107,7 @@ export function ChatHeader({
         <button
           onClick={onToggleRightSidebar}
           className={`p-1.5 rounded-lg border transition-colors ${
-            showRightSidebar ? 'bg-slate-800 border-slate-700 text-white' : 'border-slate-800 text-slate-400 hover:text-white'
+            showRightSidebar ? 'bg-slate-100 border-slate-200 text-slate-900' : 'border-slate-200 text-slate-400 hover:text-slate-600'
           }`}
           title="Toggle Schema Inspector"
         >

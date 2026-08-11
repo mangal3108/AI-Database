@@ -8,6 +8,7 @@
  */
 
 type Dialect = 'postgresql' | 'mysql' | 'mongodb' | 'sqlite' | 'sqlserver' | 'mariadb' | 'cockroachdb'
+import type { SchemaContext } from '../ai-query/ai-query-generator'
 
 export interface ValidationResult {
   isValid: boolean
@@ -148,6 +149,32 @@ export function validateReadOnlyQuery(
   }
 
   return { isValid: true, queryType, warnings }
+}
+
+/**
+ * Validate that referenced tables and columns actually exist in the schema context.
+ */
+export function semanticValidateSQL(
+  tablesUsed: string[],
+  columnsUsed: string[],
+  schema: SchemaContext
+): ValidationResult {
+  const schemaTables = new Set(schema.tables.map(t => t.name.toLowerCase()))
+  const schemaColumns = new Set(schema.tables.flatMap(t => t.columns.map(c => c.name.toLowerCase())))
+
+  for (const table of tablesUsed) {
+    if (!schemaTables.has(table.toLowerCase())) {
+      return { isValid: false, reason: `Table '${table}' does not exist in the retrieved schema.` }
+    }
+  }
+
+  for (const col of columnsUsed) {
+    if (!schemaColumns.has(col.toLowerCase())) {
+      return { isValid: false, reason: `Column '${col}' does not exist in the retrieved schema.` }
+    }
+  }
+
+  return { isValid: true }
 }
 
 /**

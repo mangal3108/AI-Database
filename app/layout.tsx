@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
@@ -17,11 +17,8 @@ export const metadata: Metadata = {
   description:
     'Connect PostgreSQL, MySQL, MongoDB, Supabase, Neon and more. Ask your database questions in natural language, generate safe SQL, visualize results, and build dashboards with Internite AI.',
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/logo.png', type: 'image/png' },
-    ],
-    shortcut: '/favicon.svg',
+    icon: '/logo.png',
+    shortcut: '/logo.png',
     apple: '/logo.png',
   },
   keywords: [

@@ -5,8 +5,8 @@
  * Never exposes raw database credentials to the AI model.
  */
 
-import { createConnector } from '@/server/connectors/registry'
-import type { TableMetadata } from '@/server/connectors/base'
+import { z } from 'zod'
+import { getAIProvider } from '../ai'
 
 export interface QueryGenerationRequest {
   naturalLanguageQuery: string
@@ -60,35 +60,61 @@ export interface QueryGenerationResult {
   }
 }
 
-const SQL_QUERY_PROMPT = `You are a SQL query expert. Generate PostgreSQL/MySQL queries based on natural language requests.
+const sqlGenerationSchema = z.object({
+  sql: z.string().nullable(),
+  tables: z.array(z.string()),
+  columns: z.array(z.string()),
+  metrics: z.array(z.string()),
+  dimensions: z.array(z.string()),
+  filters: z.array(z.string()),
+  aggregation: z.string().nullable(),
+  timeRange: z.string().nullable(),
+  reason: z.string()
+})
+
+const mongoGenerationSchema = z.object({
+  mongoPipeline: z.array(z.record(z.string(), z.any())).nullable(),
+  tables: z.array(z.string()),
+  columns: z.array(z.string()),
+  metrics: z.array(z.string()),
+  dimensions: z.array(z.string()),
+  filters: z.array(z.string()),
+  aggregation: z.string().nullable(),
+  timeRange: z.string().nullable(),
+  reason: z.string()
+})
+
+const SQL_QUERY_PROMPT = `You are a strict data-grounded SQL query expert. Generate PostgreSQL/MySQL queries based on natural language requests.
 
 Rules:
 - Only generate SELECT queries (no INSERT, UPDATE, DELETE, DROP)
-- Always include appropriate WHERE clauses
-- Use proper JOIN syntax when needed
-- Add LIMIT if no limit is specified (default: 1000)
-- Use DATE_TRUNC for time-based queries in PostgreSQL
-- Use appropriate aggregations (SUM, AVG, COUNT, etc.)
-- Include GROUP BY when using aggregations
-- Use column aliases for readability
-- Never query sensitive columns (passwords, tokens, etc.)
+- Only use tables and columns present in the schema. Do not invent columns.
+- Always include appropriate WHERE clauses.
+- Use proper JOIN syntax when needed.
+- Add LIMIT if no limit is specified (default: 1000).
+- Use DATE_TRUNC for time-based queries in PostgreSQL.
+- If information isn't in the schema, return sql as null and explain why in the reason.
+- Never query sensitive columns (passwords, tokens, etc.).
 
-Respond ONLY with valid SQL. No explanations.`
+Respond with valid JSON according to the schema.`
+
+const MONGO_QUERY_PROMPT = `You are a strict data-grounded MongoDB query expert. Generate MongoDB aggregation pipelines based on natural language requests.
+
+Rules:
+- Only use collections and fields present in the schema. Do not invent fields.
+- Always include appropriate $match clauses.
+- Limit results appropriately using $limit.
+- If information isn't in the schema, return mongoPipeline as null and explain why in the reason.
+- Never query sensitive fields.
+
+Respond with valid JSON according to the schema.`
 
 export class AIQueryGeneratorService {
-  /**
-   * Generate SQL query from natural language
-   */
   static async generateSQL(request: QueryGenerationRequest): Promise<QueryGenerationResult> {
     const { naturalLanguageQuery, schemaContext, conversationHistory } = request
-
-    // Build schema description for the prompt
     const schemaDescription = this.buildSchemaDescription(schemaContext)
-
-    // Build conversation context
     const historyContext = this.buildHistoryContext(conversationHistory)
 
-    // Construct the full prompt
     const prompt = `
 ${SQL_QUERY_PROMPT}
 
@@ -98,52 +124,68 @@ ${schemaDescription}
 ${historyContext}
 
 User Request: ${naturalLanguageQuery}
-
-SQL Query:`
-
+`
     try {
-      // Use a simple regex-based approach for common patterns
-      // In production, this would call the actual AI service
-      const generatedSQL = this.generateSQLFromPattern(naturalLanguageQuery, schemaContext)
+      const ai = getAIProvider()
+      const rawResponse = await ai.generateStructuredOutput<z.infer<typeof sqlGenerationSchema>>([
+        { role: 'user', content: prompt }
+      ], { temperature: 0 })
+      
+      const parsed = sqlGenerationSchema.parse(rawResponse)
 
       return {
-        sql: generatedSQL,
-        confidence: 0.85,
-        reasoning: 'Generated SQL query based on schema analysis and pattern matching',
-        suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext),
+        sql: parsed.sql ?? undefined,
+        confidence: parsed.sql ? 0.9 : 0,
+        reasoning: parsed.reason,
+        suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext)
       }
     } catch (error) {
-      console.error('[AI-QUERY] Generation failed:', error)
+      console.error('[AI-QUERY] SQL Generation failed:', error)
       return {
         confidence: 0,
-        reasoning: 'Failed to generate query. Please try rephrasing your request.',
+        reasoning: 'Failed to generate a valid SQL query from the available schema. Please try rephrasing your request.',
       }
     }
   }
 
-  /**
-   * Generate MongoDB aggregation pipeline from natural language
-   */
   static async generateMongoPipeline(request: QueryGenerationRequest): Promise<QueryGenerationResult> {
-    const { naturalLanguageQuery, schemaContext } = request
-
-    // Build MongoDB-specific schema description
+    const { naturalLanguageQuery, schemaContext, conversationHistory } = request
     const schemaDescription = this.buildMongoSchemaDescription(schemaContext)
+    const historyContext = this.buildHistoryContext(conversationHistory)
 
-    // Simple pattern-based generation
-    const pipeline = this.generateMongoFromPattern(naturalLanguageQuery, schemaContext)
+    const prompt = `
+${MONGO_QUERY_PROMPT}
 
-    return {
-      mongoPipeline: pipeline,
-      confidence: 0.8,
-      reasoning: 'Generated MongoDB aggregation pipeline',
-      suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext),
+Available Schema:
+${schemaDescription}
+
+${historyContext}
+
+User Request: ${naturalLanguageQuery}
+`
+    try {
+      const ai = getAIProvider()
+      const rawResponse = await ai.generateStructuredOutput<z.infer<typeof mongoGenerationSchema>>([
+        { role: 'user', content: prompt }
+      ], { temperature: 0 })
+      
+      const parsed = mongoGenerationSchema.parse(rawResponse)
+
+      return {
+        mongoPipeline: parsed.mongoPipeline ?? undefined,
+        confidence: parsed.mongoPipeline ? 0.9 : 0,
+        reasoning: parsed.reason,
+        suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext)
+      }
+    } catch (error) {
+      console.error('[AI-QUERY] Mongo Pipeline Generation failed:', error)
+      return {
+        confidence: 0,
+        reasoning: 'Failed to generate a valid MongoDB pipeline from the available schema.',
+      }
     }
   }
 
-  /**
-   * Build schema description for SQL queries
-   */
   private static buildSchemaDescription(context: SchemaContext): string {
     return context.tables.map(table => {
       const columns = table.columns.map(col => {
@@ -155,9 +197,6 @@ SQL Query:`
     }).join('\n\n')
   }
 
-  /**
-   * Build schema description for MongoDB
-   */
   private static buildMongoSchemaDescription(context: SchemaContext): string {
     return context.tables.map(table => {
       const fields = table.columns.map(col => {
@@ -167,12 +206,8 @@ SQL Query:`
     }).join('\n\n')
   }
 
-  /**
-   * Build conversation history context
-   */
   private static buildHistoryContext(history?: ConversationMessage[]): string {
     if (!history || history.length === 0) return ''
-
     return `Conversation History:\n${history.map(msg => {
       if (msg.role === 'user') {
         return `User: ${msg.content}`
@@ -182,162 +217,8 @@ SQL Query:`
     }).join('\n')}`
   }
 
-  /**
-   * Pattern-based SQL generation for common queries
-   */
-  private static generateSQLFromPattern(query: string, context: SchemaContext): string {
-    const q = query.toLowerCase()
-
-    // Find relevant table
-    const table = context.tables[0]
-    if (!table) {
-      throw new Error('No tables available')
-    }
-
-    // Time-based aggregations
-    if (q.includes('month') || q.includes('daily') || q.includes('weekly') || q.includes('yearly')) {
-      const dateCol = table.columns.find(c =>
-        c.dataType.includes('date') || c.dataType.includes('timestamp')
-      )
-      const numericCol = table.columns.find(c =>
-        c.dataType.includes('int') || c.dataType.includes('decimal') || c.dataType.includes('numeric') || c.dataType.includes('float')
-      )
-
-      if (dateCol && numericCol) {
-        const period = q.includes('month') ? 'month' : q.includes('week') ? 'week' : q.includes('year') ? 'year' : 'day'
-        return `SELECT
-  DATE_TRUNC('${period}', ${dateCol.name}) as period,
-  ${numericCol.name},
-  COUNT(*) as count
-FROM ${table.name}
-GROUP BY 1
-ORDER BY 1
-LIMIT 100`
-      }
-    }
-
-    // Count queries
-    if (q.includes('count') || q.includes('how many') || q.includes('total')) {
-      const numericCol = table.columns.find(c =>
-        c.dataType.includes('int') || c.dataType.includes('decimal') || c.dataType.includes('numeric') || c.dataType.includes('float')
-      ) || table.columns[0]
-
-      return `SELECT
-  COUNT(*) as total_count,
-  ${numericCol ? `SUM(${numericCol.name}) as total_value` : '1 as dummy'}
-FROM ${table.name}
-LIMIT 100`
-    }
-
-    // Top N queries
-    const topMatch = q.match(/top (\d+)|first (\d+)|best (\d+)/i)
-    if (topMatch) {
-      const limit = parseInt(topMatch[1] || topMatch[2] || topMatch[3] || '10')
-      const numericCol = table.columns.find(c =>
-        c.dataType.includes('int') || c.dataType.includes('decimal') || c.dataType.includes('numeric') || c.dataType.includes('float')
-      )
-      const textCol = table.columns.find(c =>
-        c.dataType.includes('varchar') || c.dataType.includes('text') || c.dataType.includes('char')
-      )
-
-      if (numericCol) {
-        return `SELECT *
-FROM ${table.name}
-ORDER BY ${numericCol.name} DESC
-LIMIT ${limit}`
-      }
-    }
-
-    // Simple SELECT
-    return `SELECT *
-FROM ${table.name}
-LIMIT 100`
-  }
-
-  /**
-   * Pattern-based MongoDB pipeline generation
-   */
-  private static generateMongoFromPattern(query: string, context: SchemaContext): object[] {
-    const q = query.toLowerCase()
-    const collection = context.tables[0]?.name || 'collection'
-
-    const pipeline: object[] = []
-
-    // Time-based aggregations
-    if (q.includes('month') || q.includes('daily') || q.includes('weekly')) {
-      const dateCol = context.tables[0]?.columns.find(c =>
-        c.dataType.includes('date') || c.dataType.includes('timestamp')
-      )?.name || 'createdAt'
-
-      pipeline.push({
-        $group: {
-          _id: {
-            period: { $dateToString: { format: '%Y-%m', date: `$${dateCol}` } }
-          },
-          count: { $sum: 1 },
-          total: { $sum: 1 }
-        }
-      })
-      pipeline.push({ $sort: { '_id.period': 1 } })
-      pipeline.push({ $limit: 100 })
-      return pipeline
-    }
-
-    // Simple count
-    pipeline.push({
-      $group: {
-        _id: null,
-        count: { $sum: 1 }
-      }
-    })
-
-    return pipeline
-  }
-
-  /**
-   * Suggest visualization based on query and schema
-   */
   private static suggestVisualization(query: string, context: SchemaContext): { chartType: string; xAxis?: string; yAxis?: string[] } {
-    const q = query.toLowerCase()
-    const table = context.tables[0]
-    if (!table) {
-      return { chartType: 'TABLE' }
-    }
-
-    const hasDate = table.columns.some(c =>
-      c.dataType.includes('date') || c.dataType.includes('timestamp')
-    )
-    const hasNumeric = table.columns.some(c =>
-      c.dataType.includes('int') || c.dataType.includes('decimal') || c.dataType.includes('numeric')
-    )
-    const hasCategory = table.columns.some(c =>
-      c.dataType.includes('varchar') && c.dataType.includes('10')
-    )
-
-    // Time series
-    if (hasDate && hasNumeric) {
-      return {
-        chartType: q.includes('trend') || q.includes('over time') || q.includes('growth') ? 'LINE' : 'BAR',
-        xAxis: table.columns.find(c => c.dataType.includes('date'))?.name,
-        yAxis: [table.columns.find(c => c.dataType.includes('int'))?.name || 'count'],
-      }
-    }
-
-    // Part-to-whole
-    if (q.includes('percent') || q.includes('%') || q.includes('distribution') || q.includes('breakdown')) {
-      return { chartType: 'PIE' }
-    }
-
-    // Comparison
-    if (q.includes('compare') || q.includes('versus') || q.includes('vs')) {
-      return { chartType: 'BAR' }
-    }
-
-    // Single metric
-    if (q.includes('total') || q.includes('count') || q.includes('sum')) {
-      return { chartType: 'KPI' }
-    }
-
+    // This will be overridden later by the deterministic chart config, but keeping skeleton for compatibility
     return { chartType: 'TABLE' }
   }
 }

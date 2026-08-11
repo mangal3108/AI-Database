@@ -111,20 +111,20 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       : 'text-slate-500'
 
   const sidebarContent = (
-    <div className="flex flex-col h-full font-sans text-xs select-none bg-[#09090B] border-r border-white/5">
+    <div className="flex flex-col h-full font-sans text-xs select-none bg-white border-r border-slate-200">
       {/* Brand & Workspace Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-white/5 shrink-0">
+      <div className="flex items-center justify-between px-4 h-14 border-b border-slate-200 shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="font-bold text-sm tracking-tight text-white font-sans">
-            INTERN<span className="text-[#60A5FA]">ITE</span>
+          <span className="font-bold text-sm tracking-tight text-slate-900 font-sans">
+            INTERN<span className="text-indigo-600">ITE</span>
           </span>
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-[#60A5FA] border border-[#60A5FA]/20">
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
             AI
           </span>
         </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex text-slate-500 hover:text-slate-300 transition-colors p-1"
+          className="hidden lg:flex text-slate-400 hover:text-slate-600 transition-colors p-1"
           title="Toggle Sidebar"
         >
           <PanelLeft size={15} />
@@ -132,22 +132,22 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       </div>
 
       {/* Workspace Selector */}
-      <div className="p-2.5 border-b border-white/5 shrink-0">
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/5">
-          <div className="w-6 h-6 rounded-lg bg-indigo-600/20 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/20">
+      <div className="p-2.5 border-b border-slate-200 shrink-0">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+          <div className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 font-bold text-xs flex items-center justify-center border border-indigo-200">
             {user?.name ? user.name[0]?.toUpperCase() : 'M'}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-200 truncate">
+              <p className="text-xs font-semibold text-slate-900 truncate">
                 {user?.name ? `${user.name}'s Workspace` : 'My Workspace'}
               </p>
-              <p className={`text-[9px] uppercase tracking-wider font-mono ${planBadgeColor}`}>
+              <p className={`text-[9px] uppercase tracking-wider font-mono ${planSlug === 'pro' || planSlug === 'business' ? 'text-indigo-600' : 'text-slate-500'}`}>
                 {planName} PLAN
               </p>
             </div>
           )}
-          {!collapsed && <ChevronDown size={13} className="text-slate-500" />}
+          {!collapsed && <ChevronDown size={13} className="text-slate-400" />}
         </div>
       </div>
 
@@ -155,7 +155,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       <div className="p-2.5 shrink-0">
         <Link
           href="/dashboard/chat"
-          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-3 rounded-xl transition-all shadow-sm shadow-indigo-600/20 text-xs"
+          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl transition-all shadow-sm shadow-indigo-200 text-xs"
         >
           <Plus size={15} />
           {!collapsed && <span>New Conversation</span>}
@@ -167,7 +167,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
         {NAV_GROUPS.map(group => (
           <div key={group.title}>
             {!collapsed && (
-              <p className="px-2 mb-1.5 text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+              <p className="px-2 mb-1.5 text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                 {group.title}
               </p>
             )}
@@ -180,12 +180,12 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
                       href={item.href}
                       className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                         isActive
-                          ? 'bg-indigo-600/15 text-white font-semibold border border-indigo-500/20'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                          ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                       title={collapsed ? item.label : undefined}
                     >
-                      <item.icon size={15} className={isActive ? 'text-indigo-400' : 'text-slate-500'} />
+                      <item.icon size={15} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
                       {!collapsed && <span>{item.label}</span>}
                     </Link>
                   </li>
@@ -197,31 +197,31 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       </nav>
 
       {/* Bottom: Usage + User */}
-      <div className="px-2.5 pb-3 pt-2 space-y-2 shrink-0 border-t border-white/5">
+      <div className="px-2.5 pb-3 pt-2 space-y-2 shrink-0 border-t border-slate-200">
         {/* Real Usage Meter */}
         {!collapsed && (
-          <div className="bg-white/[0.02] border border-white/5 rounded-xl p-2.5">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-medium text-slate-300">AI Queries</span>
-              <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
+              <span className="text-[11px] font-medium text-slate-700">AI Queries</span>
+              <span className="text-[9px] font-mono font-bold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded border border-indigo-200">
                 {planName.toUpperCase()}
               </span>
             </div>
-            <div className="h-1 bg-white/5 rounded-full overflow-hidden mb-1">
+            <div className="h-1 bg-slate-200 rounded-full overflow-hidden mb-1">
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-500"
+                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
                 style={{ width: `${usagePercentage}%` }}
               />
             </div>
             <p className="text-[10px] font-mono text-slate-500">
-              <span className="font-bold text-white">{usedQueries}</span> / {limitQueries} queries
+              <span className="font-bold text-slate-900">{usedQueries}</span> / {limitQueries} queries
             </p>
           </div>
         )}
 
         {/* User Account */}
-        <div className={`flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/[0.03] transition-colors cursor-pointer ${collapsed ? 'justify-center' : ''}`}>
-          <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-500/20">
+        <div className={`flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer ${collapsed ? 'justify-center' : ''}`}>
+          <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-200">
             {user?.image ? (
               <img src={user.image} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
@@ -230,14 +230,14 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-200 truncate">{user?.name ?? 'User'}</p>
+              <p className="text-xs font-semibold text-slate-900 truncate">{user?.name ?? 'User'}</p>
               <p className="text-[10px] text-slate-500 truncate font-mono">{user?.email}</p>
             </div>
           )}
           {!collapsed && (
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="text-slate-500 hover:text-white transition-colors p-1"
+              className="text-slate-400 hover:text-slate-600 transition-colors p-1"
               title="Sign out"
             >
               <LogOut size={13} />
@@ -252,7 +252,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
     <>
       <CommandPalette />
       <aside
-        className={`hidden lg:flex flex-col bg-[#09090B] border-r border-white/5 shrink-0 transition-all duration-300 ${
+        className={`hidden lg:flex flex-col bg-white border-r border-slate-200 shrink-0 transition-all duration-300 ${
           collapsed ? 'w-16' : 'w-60'
         }`}
       >
@@ -281,7 +281,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
               initial={{ x: -240 }}
               animate={{ x: 0 }}
               exit={{ x: -240 }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-60 bg-[#09090B] border-r border-white/10"
+              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-60 bg-white border-r border-slate-200"
             >
               <button
                 onClick={() => setMobileOpen(false)}

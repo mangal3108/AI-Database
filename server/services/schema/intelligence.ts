@@ -1,5 +1,8 @@
 import type { DatabaseConnector, DatabaseMetadata, TableMetadata } from '../../connectors/base'
 import { getAIProvider } from '../ai'
+import { createHash } from 'crypto'
+import { prisma } from '../../../lib/prisma'
+import { retrieveRelevantChunks, indexDatabaseSchema, buildRagContext } from '../rag/pipeline'
 
 /**
  * Generates semantic descriptions for database tables using AI.
@@ -130,15 +133,73 @@ export function buildSchemaContext(
   return lines.join('\n')
 }
 
+export async function getRelevantSchemaContext(
+  organizationId: string,
+  databaseConnectionId: string,
+  connector: DatabaseConnector,
+  question: string
+): Promise<{ schemaContext: string, isStale: boolean }> {
+  const connection = await prisma.databaseConnection.findUnique({
+    where: { id: databaseConnectionId }
+  })
+  
+  if (!connection) throw new Error("Connection not found")
+
+  const metadata = await connector.getDatabaseMetadata()
+  
+  // Calculate schema hash
+  const schemaText = buildSchemaContext(metadata)
+  const schemaHash = createHash('sha256').update(schemaText).digest('hex')
+  
+  let isStale = false
+  if (connection.schemaHash !== schemaHash) {
+    isStale = true
+    // Invalidate stale schema chunks
+    await prisma.knowledgeChunk.deleteMany({
+      where: { databaseConnectionId }
+    })
+    
+    // Update hash
+    await prisma.databaseConnection.update({
+      where: { id: databaseConnectionId },
+      data: {
+        schemaHash,
+        lastIndexedAt: new Date(),
+        schemaVersion: { increment: 1 }
+      }
+    })
+    
+    // Re-index
+    await indexDatabaseSchema(
+      organizationId,
+      databaseConnectionId,
+      schemaText,
+      connection.projectId
+    )
+  }
+  
+  // Retrieve relevant chunks
+  const chunks = await retrieveRelevantChunks(
+    organizationId,
+    databaseConnectionId,
+    question,
+    10
+  )
+  
+  return {
+    schemaContext: buildRagContext(chunks),
+    isStale
+  }
+}
+
 /**
  * Build the system prompt for the AI query engine.
  */
 export function buildQuerySystemPrompt(
   metadata: DatabaseMetadata,
   dialect: string,
-  relevantTables?: string[]
+  schemaContext: string
 ): string {
-  const schemaContext = buildSchemaContext(metadata, relevantTables)
 
   return `You are Internite AI's database query engine. You help users query their ${metadata.databaseType} database.
 

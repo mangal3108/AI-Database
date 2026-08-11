@@ -186,6 +186,9 @@ model DatabaseConnection {
   readOnly             Boolean          @default(true)
   sslEnabled           Boolean          @default(true)
   defaultSchema        String?
+  schemaHash           String?
+  schemaVersion        Int              @default(1)
+  lastIndexedAt        DateTime?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   deletedAt            DateTime?
