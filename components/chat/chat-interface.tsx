@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -97,7 +97,11 @@ export function ChatInterface({
   })
 
   const databases = dbsData?.connections ?? []
-  const connectedDbs = databases.filter(d => d.status === 'CONNECTED')
+  // Include any non-DISCONNECTED/PENDING database so users can still query
+  // even if RAG indexing failed (ERROR) or schema is being indexed (INDEXING)
+  const connectedDbs = databases.filter(
+    d => d.status === 'CONNECTED' || d.status === 'ERROR' || d.status === 'INDEXING'
+  )
 
   // Fetch real schema tables for selected database
   const { data: schemaData, isLoading: isSchemaLoading } = useQuery({
@@ -113,7 +117,9 @@ export function ChatInterface({
 
   useEffect(() => {
     if (connectedDbs.length > 0 && !selectedDb) {
-      setSelectedDb(connectedDbs[0]!.id)
+      // Prefer a CONNECTED db, fall back to first available
+      const preferred = connectedDbs.find(d => d.status === 'CONNECTED') ?? connectedDbs[0]!
+      setSelectedDb(preferred.id)
     }
   }, [connectedDbs, selectedDb])
 

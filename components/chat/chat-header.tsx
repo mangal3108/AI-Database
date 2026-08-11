@@ -52,17 +52,24 @@ export function ChatHeader({
             <option value="" className="bg-slate-900 text-slate-300">Select Database...</option>
             {databases.map(db => (
               <option key={db.id} value={db.id} className="bg-slate-900 text-white">
-                ● {db.name} ({db.type})
+                {db.status === 'CONNECTED' ? '●' : db.status === 'ERROR' ? '⚠' : '○'} {db.name} ({db.type})
               </option>
             ))}
           </select>
           {currentDb && (
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-              READY
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+              currentDb.status === 'CONNECTED'
+                ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                : currentDb.status === 'ERROR'
+                ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+            }`}>
+              {currentDb.status === 'CONNECTED' ? 'READY' : currentDb.status}
             </span>
           )}
         </div>
       </div>
+
 
 
 
