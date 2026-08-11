@@ -118,21 +118,55 @@ export async function runChatEngine(opts: ChatEngineOptions): Promise<ChatEngine
       throw new Error('Database connection not found or access denied')
     }
 
-    if (databaseConnection.status === 'CONNECTED') {
-      const connSnap = databaseConnection
+    const connSnap = databaseConnection
+    try {
+      connector = await connectorRegistry.getOrCreate(
+        databaseConnectionId,
+        async () => {
+          const c = createConnector(
+            connSnap.type as 'POSTGRESQL',
+            connSnap.encryptedCredentials
+          )
+          await c.connect()
+          return c
+        }
+      )
+      dbMetadata = await connector.getDatabaseMetadata()
+    } catch {
+      // Fallback: build metadata from Prisma stored DB schema if live connector fails
       try {
-        connector = await connectorRegistry.getOrCreate(
-          databaseConnectionId,
-          async () => {
-            const c = createConnector(
-              connSnap.type as 'POSTGRESQL',
-              connSnap.encryptedCredentials
-            )
-            await c.connect()
-            return c
+        const storedSchemas = await prisma.dbSchema.findMany({
+          where: { databaseConnectionId },
+          include: { tables: { include: { columns: true } } },
+        })
+
+        if (storedSchemas.length > 0) {
+          dbMetadata = {
+            databaseName: databaseConnection.name,
+            databaseType: databaseConnection.type,
+            version: 'Ready',
+            totalTables: storedSchemas.reduce((acc, s) => acc + s.tables.length, 0),
+            schemas: storedSchemas.map(s => ({
+              name: s.name,
+              tables: s.tables.map(t => ({
+                name: t.name,
+                schema: s.name,
+                rowCount: t.rowCount ? Number(t.rowCount) : 0,
+                columns: t.columns.map(c => ({
+                  name: c.name,
+                  dataType: c.dataType,
+                  isNullable: c.isNullable,
+                  isPrimaryKey: c.isPrimaryKey,
+                  isForeignKey: c.isForeignKey,
+                  isUnique: c.isUnique,
+                })),
+                primaryKeys: t.columns.filter(c => c.isPrimaryKey).map(c => c.name),
+                foreignKeys: [],
+                indexes: [],
+              })),
+            })),
           }
-        )
-        dbMetadata = await connector.getDatabaseMetadata()
+        }
       } catch {
         // Continue without DB metadata — AI will explain the issue
       }
