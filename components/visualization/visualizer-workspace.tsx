@@ -142,12 +142,13 @@ const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#06b6d4'
 
 interface VisualizerWorkspaceProps {
   userId: string
+  initialDatabases?: Database[]
 }
 
-export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
+export function VisualizerWorkspace({ userId, initialDatabases = [] }: VisualizerWorkspaceProps) {
   // State
-  const [databases, setDatabases] = useState<Database[]>([])
-  const [selectedDatabase, setSelectedDatabase] = useState<string>('')
+  const [databases, setDatabases] = useState<Database[]>(initialDatabases)
+  const [selectedDatabase, setSelectedDatabase] = useState<string>(initialDatabases[0]?.id ?? '')
   const [tables, setTables] = useState<TableInfo[]>([])
   const [selectedTable, setSelectedTable] = useState<string>('')
 
@@ -191,9 +192,9 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
       const res = await fetch('/api/databases')
       if (res.ok) {
         const data = await res.json()
-        setDatabases(data.connections || data.databases || [])
         const available = (data.connections || data.databases || []) as Database[]
         if (available.length > 0) {
+          setDatabases(available)
           setSelectedDatabase(current => current || available[0].id)
         }
       }
