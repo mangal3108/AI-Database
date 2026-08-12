@@ -83,7 +83,7 @@ export default function SettingsPage() {
           <div className="space-y-3 text-xs">
             <div>
               <label className="block text-slate-400 font-medium mb-1">Full Name</label>
-              <input type="text" readOnly value={session?.user?.name ?? ''} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 cursor-default" />
+              <input type="text" readOnly value={(session?.user?.name ?? '').replace(/^Devloper\b/, 'Developer')} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 cursor-default" />
             </div>
             <div>
               <label className="block text-slate-400 font-medium mb-1">Email Address</label>

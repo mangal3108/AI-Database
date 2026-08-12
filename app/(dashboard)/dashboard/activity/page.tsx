@@ -14,7 +14,7 @@ export default async function ActivityPage() {
   const events = rows.map(row => ({
     id: row.id,
     userId: row.userId ?? '',
-    userName: row.user?.name ?? 'System',
+    userName: (row.user?.name ?? 'System').replace(/^Devloper\b/, 'Developer'),
     userEmail: row.user?.email ?? '',
     action: row.action,
     resource: row.resourceType ?? 'workspace',
