@@ -2,7 +2,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'AI Chat Workstation — Internite AI',
+  title: 'Chat — Internite',
 }
 
 export default function ChatPage() {

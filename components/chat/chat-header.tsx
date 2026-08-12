@@ -1,6 +1,6 @@
 'use client'
 
-import { Database, Zap, Brain, PanelLeft, PanelRight, RefreshCw } from 'lucide-react'
+import { Database, Zap, PanelLeft, PanelRight } from 'lucide-react'
 
 interface ChatHeaderProps {
   databases?: { id: string; name: string; type: string; status: string }[]
@@ -57,7 +57,7 @@ export function ChatHeader({
             ))}
           </select>
           {currentDb && (
-            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${
               currentDb.status === 'CONNECTED'
                 ? 'text-emerald-600 bg-emerald-50 border-emerald-200 font-bold'
                 : currentDb.status === 'ERROR'
@@ -94,12 +94,12 @@ export function ChatHeader({
             onClick={() => onToggleMode?.('deep')}
             className={`flex items-center gap-1 px-3 py-1 rounded-full font-semibold text-[11px] transition-all ${
               mode === 'deep'
-                ? 'bg-indigo-600 text-white shadow-sm'
+                ? 'bg-[#1d1d1f] text-white shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
             }`}
             title="Deep Mode: Multi-table graph reasoning + RAG context"
           >
-            <Brain size={12} />
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
             <span>Deep</span>
           </button>
         </div>

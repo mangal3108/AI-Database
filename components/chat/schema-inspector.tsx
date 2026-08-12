@@ -65,7 +65,7 @@ export function SchemaInspector({
       {/* Schema Tree */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/50">
         <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-2">
-          <span>SCHEMA TABLES ({filteredTables.length})</span>
+          <span>Schema tables ({filteredTables.length})</span>
           {isLoading && <RefreshCw size={10} className="animate-spin text-slate-400" />}
         </div>
 
@@ -122,7 +122,7 @@ export function SchemaInspector({
       {/* RAG Context status footer */}
       <div className="p-3 border-t border-slate-200 bg-white flex items-center gap-2 text-[11px] text-slate-600">
         <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-        <span>Hybrid RAG Index Active</span>
+        <span>Schema index active</span>
       </div>
     </div>
   )

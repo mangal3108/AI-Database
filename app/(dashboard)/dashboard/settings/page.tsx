@@ -2,7 +2,7 @@
 import SettingsClient from './settings-client'
 
 export const metadata: Metadata = {
-  title: 'Workspace Settings — Internite AI',
+  title: 'Workspace Settings — Internite',
   description: 'Manage workspace profile, security preferences, and team credentials.',
 }
 

@@ -62,21 +62,21 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto font-sans">
+    <div className="p-5 sm:p-8 lg:p-12 max-w-6xl mx-auto font-sans text-[#1d1d1f]">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-100">Workspace Settings</h1>
-        <p className="text-sm text-slate-400 mt-1">Manage profile details, team workspace, security controls, and API access.</p>
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.04em] text-[#1d1d1f]">Workspace settings</h1>
+        <p className="text-sm text-[#6e6e73] mt-2">Manage profile details, workspace access, security, and API connections.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Account Profile */}
-        <div className="bg-[#0D111A] border border-slate-800 rounded-3xl p-6">
+        <div className="bg-white border border-[#e5e5e7] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,.03)]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               <User size={20} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Account Profile</h3>
+              <h3 className="text-base font-semibold text-[#1d1d1f]">Account profile</h3>
               <p className="text-xs text-slate-400">Personal details and preferences</p>
             </div>
           </div>
@@ -93,13 +93,13 @@ export default function SettingsPage() {
         </div>
 
         {/* Active Organization */}
-        <div className="bg-[#0D111A] border border-slate-800 rounded-3xl p-6">
+        <div className="bg-white border border-[#e5e5e7] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,.03)]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
               <Building2 size={20} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Active Organization</h3>
+              <h3 className="text-base font-semibold text-[#1d1d1f]">Active organization</h3>
               <p className="text-xs text-slate-400">Workspace multi-tenancy controls</p>
             </div>
           </div>
@@ -119,13 +119,13 @@ export default function SettingsPage() {
         </div>
 
         {/* Security & Encryption */}
-        <div className="bg-[#0D111A] border border-slate-800 rounded-3xl p-6">
+        <div className="bg-white border border-[#e5e5e7] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,.03)]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Shield size={20} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Security &amp; Encryption</h3>
+              <h3 className="text-base font-semibold text-[#1d1d1f]">Security &amp; encryption</h3>
               <p className="text-xs text-slate-400">Password &amp; encrypted connection policy</p>
             </div>
           </div>
@@ -211,13 +211,13 @@ export default function SettingsPage() {
         </div>
 
         {/* API Keys */}
-        <div className="bg-[#0D111A] border border-slate-800 rounded-3xl p-6">
+        <div className="bg-white border border-[#e5e5e7] rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,.03)]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
               <Key size={20} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">API Keys &amp; Tokens</h3>
+              <h3 className="text-base font-semibold text-[#1d1d1f]">API keys &amp; tokens</h3>
               <p className="text-xs text-slate-400">REST API access keys</p>
             </div>
           </div>

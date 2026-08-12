@@ -4,8 +4,8 @@ import type { Metadata } from 'next'
 import { VisualizerClient } from './visualizer-client'
 
 export const metadata: Metadata = {
-  title: 'Data Visualizer — Internite AI',
-  description: 'Transform your data into interactive visualizations and AI-powered insights.',
+  title: 'Data Visualizer — Internite',
+  description: 'Transform your data into interactive visualizations and clear insights.',
 }
 
 export default async function VisualizerPage() {

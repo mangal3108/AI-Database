@@ -39,7 +39,7 @@ export function ChatSidebar({
       <div className="p-3 border-b border-slate-200">
         <button
           onClick={onNewChat}
-          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm shadow-indigo-200"
+          className="w-full flex items-center justify-center gap-2 bg-[#1d1d1f] hover:bg-black text-white font-semibold py-2.5 px-4 rounded-lg transition-all"
         >
           <Plus size={15} />
           <span>New Conversation</span>
@@ -65,9 +65,9 @@ export function ChatSidebar({
         {/* Saved / Favorites */}
         {favorites.length > 0 && (
           <div>
-            <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider mb-1.5 px-2">
-              <Star size={10} className="fill-amber-400" />
-              <span>SAVED QUERIES</span>
+            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-2">
+              <Star size={10} />
+              <span>Saved queries</span>
             </div>
             <div className="space-y-0.5">
               {favorites.map(c => (
@@ -88,8 +88,8 @@ export function ChatSidebar({
 
         {/* Recent Chats */}
         <div>
-          <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-2">
-            RECENT CHATS
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-2">
+            Recent chats
           </div>
           {filtered.length === 0 ? (
             <div className="text-slate-500 text-center py-6 text-xs px-4">

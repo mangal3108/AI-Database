@@ -626,7 +626,7 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
                 className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg hover:bg-muted"
               >
                 <Sparkles className="w-4 h-4" />
-                AI Insight
+                Insights
               </button>
               <button
                 onClick={() => setShowSaveModal(true)}
@@ -860,7 +860,7 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
               <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="font-medium">AI Analysis</span>
+                  <span className="font-medium">Analysis</span>
                 </div>
                 <p className="text-sm mb-3">{insight.summary}</p>
                 {insight.observations?.length > 0 && (
@@ -890,7 +890,7 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
                 className="flex items-center gap-1 text-primary hover:underline"
               >
                 <Sparkles className="w-3 h-3" />
-                {isGeneratingInsight ? 'Analyzing...' : 'Get AI Insight'}
+                {isGeneratingInsight ? 'Analyzing...' : 'Get insight'}
               </button>
             </div>
           )}

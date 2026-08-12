@@ -42,7 +42,7 @@ export function CommandPalette() {
     {
       category: 'ACTIONS',
       items: [
-        { label: 'New AI Chat', href: '/dashboard/chat', icon: Plus, badge: '⌘ N' },
+        { label: 'New chat', href: '/dashboard/chat', icon: Plus, badge: '⌘ N' },
         { label: 'Connect New Database', href: '/dashboard/databases/new', icon: Database },
         { label: 'Create Visualization', href: '/dashboard/visualizer', icon: BarChart3 },
       ],
@@ -50,7 +50,7 @@ export function CommandPalette() {
     {
       category: 'WORKSPACE',
       items: [
-        { label: 'AI Chat', href: '/dashboard/chat', icon: MessageSquare },
+        { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare },
         { label: 'Data Visualizer', href: '/dashboard/visualizer', icon: BarChart3 },
         { label: 'Dashboards', href: '/dashboard/dashboards', icon: Layers },
         { label: 'Saved Queries', href: '/dashboard/queries', icon: Sparkles },
@@ -60,7 +60,7 @@ export function CommandPalette() {
       category: 'DATA & DEVELOPER',
       items: [
         { label: 'Databases', href: '/dashboard/databases', icon: Database },
-        { label: 'Knowledge / RAG', href: '/dashboard/knowledge', icon: BookOpen },
+        { label: 'Knowledge', href: '/dashboard/knowledge', icon: BookOpen },
         { label: 'API Reference', href: '/developers/api', icon: Code2 },
         { label: 'API Keys', href: '/dashboard/settings/api-keys', icon: Key },
         { label: 'Webhooks', href: '/dashboard/settings/webhooks', icon: Webhook },

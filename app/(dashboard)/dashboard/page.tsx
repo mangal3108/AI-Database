@@ -46,28 +46,28 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl mx-auto font-sans space-y-10 text-slate-100">
+    <div className="p-5 sm:p-8 lg:p-12 max-w-7xl mx-auto font-sans space-y-8 text-[#1d1d1f]">
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-[#e5e5e7] pb-7">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-semibold text-[#1d1d1f] tracking-[-0.04em]">
             Good day, {session?.user?.name ?? 'Developer'}.
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Here is what is happening across your databases and AI intelligence layer.
+          <p className="text-sm text-[#6e6e73] mt-2 max-w-xl">
+            A simple view of your connected data, saved work, and recent activity.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/chat"
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-sm shadow-indigo-600/20"
+            className="inline-flex items-center gap-2 bg-[#1d1d1f] hover:bg-black text-white font-semibold px-4 py-2.5 rounded-lg text-xs transition-all"
           >
             <MessageSquare size={14} />
             Ask Question
           </Link>
           <Link
             href="/dashboard/databases/new"
-            className="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all"
+            className="inline-flex items-center gap-2 bg-white hover:bg-[#f2f2f2] border border-[#d2d2d7] text-[#1d1d1f] font-semibold px-4 py-2.5 rounded-lg text-xs transition-all"
           >
             <Plus size={14} />
             Connect DB
@@ -83,26 +83,26 @@ export default async function DashboardPage() {
           { label: 'RAG Knowledge Index', value: 'Ready', sub: 'Schema graph vector space', icon: Sparkles, color: 'text-amber-400', bg: 'bg-amber-500/10' },
           { label: 'Security Policy', value: 'Read-Only', sub: 'AST Query Safety Engine', icon: Shield, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
         ].map(m => (
-          <div key={m.label} className="bg-[#111113]/80 border border-white/5 rounded-2xl p-5 backdrop-blur-sm space-y-2">
+          <div key={m.label} className="bg-white border border-[#e5e5e7] rounded-2xl p-5 space-y-2 shadow-[0_1px_2px_rgba(0,0,0,.03)]">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-medium">{m.label}</span>
+              <span className="text-xs text-[#6e6e73] font-medium">{m.label}</span>
               <div className={`p-2 rounded-xl ${m.bg} ${m.color}`}>
                 <m.icon size={15} />
               </div>
             </div>
-            <div className="text-2xl font-black text-white font-sans">{m.value}</div>
-            <p className="text-[11px] text-slate-500 font-mono">{m.sub}</p>
+            <div className="text-2xl font-semibold text-[#1d1d1f] font-sans">{m.value}</div>
+            <p className="text-[11px] text-[#6e6e73]">{m.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Main Section Grid */}
-      <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.06] p-5 sm:p-6" aria-labelledby="getting-started-title">
+      <section className="rounded-2xl border border-[#e5e5e7] bg-white p-5 sm:p-6" aria-labelledby="getting-started-title">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-300">Getting started</p>
-            <h2 id="getting-started-title" className="mt-1 text-lg font-bold text-white">Turn your data into answers</h2>
-            <p className="mt-1 text-xs text-slate-400">Complete these steps to get the most from Internite AI.</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">Getting started</p>
+            <h2 id="getting-started-title" className="mt-1 text-lg font-semibold text-[#1d1d1f]">Turn your data into answers</h2>
+            <p className="mt-1 text-xs text-[#6e6e73]">Complete these steps to get the most from Internite.</p>
           </div>
           <span className="rounded-full border border-indigo-400/20 bg-indigo-400/10 px-2.5 py-1 text-[11px] font-semibold text-indigo-200">
             {databases.length > 0 ? '1 of 3 complete' : '0 of 3 complete'}
@@ -129,14 +129,14 @@ export default async function DashboardPage() {
         {/* Connected Databases List (2 Cols) */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">YOUR DATABASES</h2>
+          <h2 className="text-sm font-semibold text-[#1d1d1f]">Your databases</h2>
             <Link href="/dashboard/databases" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">
               View all <ChevronRight size={13} />
             </Link>
           </div>
 
           {databases.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-[#111113] border border-white/5 text-center space-y-3">
+            <div className="p-8 rounded-2xl bg-white border border-[#e5e5e7] text-center space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
                 <Database size={20} />
               </div>
@@ -189,7 +189,7 @@ export default async function DashboardPage() {
 
         {/* Recent Activity / Chats (1 Col) */}
         <div className="space-y-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">RECENT CHATS</h2>
+          <h2 className="text-sm font-semibold text-[#1d1d1f]">Recent chats</h2>
 
           {conversations.length === 0 ? (
             <div className="p-6 rounded-2xl bg-[#111113] border border-white/5 text-center text-xs text-slate-500">

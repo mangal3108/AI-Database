@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Database, Loader2, Sparkles, Terminal, TrendingUp, Users, Package, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Send, Database, Loader2, Terminal, TrendingUp, Users, Package, AlertTriangle, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 import { ChatHeader } from '@/components/chat/chat-header'
@@ -294,11 +294,11 @@ export function ChatInterface({
             {messages.length === 0 && (
               <div className="max-w-3xl mx-auto py-12 px-4 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto mb-6">
-                  <Sparkles size={28} className="text-indigo-600" />
+                  <Database size={28} className="text-indigo-600" />
                 </div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Talk to your database.</h1>
+                <h1 className="text-3xl font-semibold text-slate-900 tracking-[-0.04em] mb-2">Explore your data.</h1>
                 <p className="text-slate-500 text-sm max-w-lg mx-auto mb-10">
-                  Ask questions in plain English. Internite AI translates your intent into safe read-only SQL, delivers instant answers, and selects the right visualization automatically.
+                  Ask questions in plain language and get clear, read-only answers from your connected database.
                 </p>
 
                 {/* Prompt Suggestion Cards */}
@@ -333,7 +333,7 @@ export function ChatInterface({
                 <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
                   <Loader2 size={16} className="animate-spin text-indigo-400" />
                 </div>
-                <div className="bg-[#0D111A] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-indigo-300 font-mono flex items-center gap-2">
+                <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-600 flex items-center gap-2 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>{statusStage || 'Executing query safety checks...'}</span>
                 </div>
@@ -384,7 +384,7 @@ export function ChatInterface({
               />
               <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs mt-1">
                 <div className="flex items-center gap-2 text-slate-400 font-mono text-[11px]">
-                  <Terminal size={13} className="text-indigo-500" />
+                  <Terminal size={13} className="text-slate-400" />
                   <span>Type <kbd className="px-1 py-0.5 bg-slate-50 rounded border border-slate-200 text-slate-500">/</kbd> for commands</span>
                   <span>·</span>
                   <span><kbd className="px-1 py-0.5 bg-slate-50 rounded border border-slate-200 text-slate-500">⌘+Enter</kbd> to run</span>
@@ -392,7 +392,7 @@ export function ChatInterface({
                 <button
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isLoading}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl transition-all disabled:opacity-40 disabled:bg-slate-200 disabled:text-slate-500 flex items-center gap-1.5 shadow-sm"
+                  className="bg-[#1d1d1f] hover:bg-black text-white font-semibold px-4 py-2 rounded-lg transition-all disabled:opacity-40 disabled:bg-slate-200 disabled:text-slate-500 flex items-center gap-1.5"
                 >
                   {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                   <span>Run</span>

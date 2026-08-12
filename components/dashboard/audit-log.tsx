@@ -152,7 +152,7 @@ function getActionIcon(action: string) {
 
 function getActionLabel(action: string): string {
   const labels: Record<string, string> = {
-    AI_QUERY_EXECUTED: 'Executed AI query',
+    AI_QUERY_EXECUTED: 'Executed query',
     QUERY_BLOCKED: 'Blocked query',
     DATABASE_CONNECTED: 'Connected database',
     DATABASE_DISCONNECTED: 'Disconnected database',
@@ -248,7 +248,7 @@ export function AuditLog() {
   }
 
   return (
-    <div className="bg-[#0D111A] border border-slate-800 rounded-2xl overflow-hidden">
+    <div className="bg-white border border-[#e5e5e7] rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,.03)]">
       {/* Header */}
       <div className="p-6 border-b border-slate-800">
         <div className="flex items-center justify-between mb-4">
@@ -257,7 +257,7 @@ export function AuditLog() {
               <Activity className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h2 className="font-bold text-white">Audit Log</h2>
+              <h2 className="font-semibold text-[#1d1d1f]">Audit log</h2>
               <p className="text-xs text-slate-500">{filteredEvents.length} events</p>
             </div>
           </div>

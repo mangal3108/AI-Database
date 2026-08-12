@@ -30,17 +30,17 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'WORKSPACE',
     items: [
-      { href: '/dashboard/chat', icon: MessageSquare, label: 'AI Chat' },
+      { href: '/dashboard/chat', icon: MessageSquare, label: 'Chat' },
       { href: '/dashboard/visualizer', icon: BarChart3, label: 'Data Visualizer' },
       { href: '/dashboard/dashboards', icon: Layers, label: 'Dashboards' },
-      { href: '/dashboard/queries', icon: Sparkles, label: 'Saved Queries' },
+      { href: '/dashboard/queries', icon: BarChart3, label: 'Saved Queries' },
     ],
   },
   {
     title: 'DATA',
     items: [
       { href: '/dashboard/databases', icon: Database, label: 'Databases' },
-      { href: '/dashboard/knowledge', icon: BookOpen, label: 'Knowledge / RAG' },
+      { href: '/dashboard/knowledge', icon: BookOpen, label: 'Knowledge' },
     ],
   },
   {
@@ -119,9 +119,6 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           <span className="font-bold text-sm tracking-tight text-slate-900 font-sans">
             INTERN<span className="text-indigo-600">ITE</span>
           </span>
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
-            AI
-          </span>
         </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -142,7 +139,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
         <Link
           href="/dashboard/chat"
           aria-label="Start a new conversation"
-          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl transition-all shadow-sm shadow-indigo-200 text-xs"
+            className="w-full flex items-center justify-center gap-2 bg-[#1d1d1f] hover:bg-black text-white font-semibold py-2.5 px-3 rounded-lg transition-all text-xs"
         >
           <Plus size={15} />
           {!collapsed && <span>New Conversation</span>}

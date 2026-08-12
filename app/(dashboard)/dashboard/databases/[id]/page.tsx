@@ -81,7 +81,7 @@ export default async function DatabaseDetailPage({
             href={`/dashboard/chat?connectionId=${connection.id}`}
             className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-600/20"
           >
-            Start AI Chat →
+            Start chat →
           </Link>
         </div>
       </div>
