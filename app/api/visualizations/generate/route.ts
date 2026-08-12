@@ -6,6 +6,7 @@ import { createConnector } from '@/server/connectors/registry'
 import { recommendChart, analyzeDataset } from '@/server/services/visualization/chart-recommendation-engine'
 import { AIQueryGeneratorService } from '@/server/services/ai-query/ai-query-generator'
 import type { NormalizedDataset } from '@/server/services/visualization/types'
+import { validateReadOnlyQuery } from '@/server/services/query/safety'
 
 /**
  * POST /api/visualizations/generate
@@ -80,7 +81,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const safety = validateReadOnlyQuery(executableQuery!, connector.getCapabilities().dialect)
+    if (!safety.isValid) {
+      await connector.disconnect().catch(() => undefined)
+      return NextResponse.json({ error: `Read-only validation failed: ${safety.reason}` }, { status: 422 })
+    }
+
     const result = await connector.executeReadQuery(executableQuery!)
+    await connector.disconnect().catch(() => undefined)
 
     if (!result.rows || result.rows.length === 0) {
       return NextResponse.json(
