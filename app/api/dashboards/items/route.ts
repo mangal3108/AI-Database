@@ -26,18 +26,27 @@ export async function POST(request: Request) {
   if (!database) return NextResponse.json({ error: 'Database not found' }, { status: 404 })
 
   try {
-    const dashboard = await prisma.dashboard.findFirst({ where: { organizationId: tenant.organizationId, name: 'Executive Overview' } })
-      || await prisma.dashboard.create({ data: { organizationId: tenant.organizationId, projectId: tenant.projectId, name: 'Executive Overview', description: 'Saved results from Chat' } })
-    const item = await prisma.dashboardItem.create({
-      data: {
-        dashboardId: dashboard.id,
-        title: body.title?.trim() || 'Chat result',
-        visualizationType: 'TABLE',
-        config: { query: body.query.trim(), databaseId: database.id },
-      },
-      select: { id: true, dashboardId: true, title: true },
-    })
-    return NextResponse.json({ dashboard, item }, { status: 201 })
+    const existing = await prisma.dashboard.findFirst({ where: { organizationId: tenant.organizationId, name: 'Executive Overview' } })
+    const dashboard = existing || await prisma.dashboard.create({ data: { organizationId: tenant.organizationId, projectId: tenant.projectId, name: 'Executive Overview', description: 'Saved results from Chat', layout: { savedResults: [] } } })
+    const layout = (dashboard.layout && typeof dashboard.layout === 'object' && !Array.isArray(dashboard.layout)) ? dashboard.layout as Record<string, unknown> : {}
+    const savedResults = Array.isArray(layout.savedResults) ? layout.savedResults : []
+    const result = { title: body.title?.trim() || 'Chat result', query: body.query.trim(), databaseId: database.id, createdAt: new Date().toISOString() }
+    const updatedDashboard = await prisma.dashboard.update({ where: { id: dashboard.id }, data: { layout: { ...layout, savedResults: [...savedResults, result] } } })
+    let item: { id: string; dashboardId: string; title: string } | null = null
+    try {
+      item = await prisma.dashboardItem.create({
+        data: {
+          dashboardId: dashboard.id,
+          title: body.title?.trim() || 'Chat result',
+          visualizationType: 'TABLE',
+          config: { query: body.query.trim(), databaseId: database.id },
+        },
+        select: { id: true, dashboardId: true, title: true },
+      })
+    } catch (itemError) {
+      console.error('[DASHBOARD ITEMS] Optional item row failed; layout persistence retained:', itemError)
+    }
+    return NextResponse.json({ dashboard: updatedDashboard, item }, { status: 201 })
   } catch (error) {
     console.error('[DASHBOARD ITEMS] Create error:', error)
     return NextResponse.json({ error: 'Failed to persist dashboard item' }, { status: 500 })
