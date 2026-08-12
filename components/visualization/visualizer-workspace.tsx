@@ -175,7 +175,7 @@ export function VisualizerWorkspace({ userId, initialDatabases = [] }: Visualize
   const [showInsight, setShowInsight] = useState(false)
   const [showLeftPanel, setShowLeftPanel] = useState(true)
   const [showSaveModal, setShowSaveModal] = useState(false)
-  const [visualizationName, setVisualizationName] = useState('')
+  const [visualizationName, setVisualizationName] = useState('Monthly Revenue')
 
   const tableColumns = tables.find(table => table.name === selectedTable)?.columns ?? []
 
@@ -368,7 +368,7 @@ export function VisualizerWorkspace({ userId, initialDatabases = [] }: Visualize
       if (res.ok) {
         toast.success('Visualization saved')
         setShowSaveModal(false)
-        setVisualizationName('')
+        setVisualizationName('Monthly Revenue')
       } else {
         throw new Error('Failed to save')
       }
