@@ -191,7 +191,7 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
       const res = await fetch('/api/databases')
       if (res.ok) {
         const data = await res.json()
-        setDatabases(data.databases || [])
+        setDatabases(data.connections || data.databases || [])
       }
     } catch (err) {
       console.error('Failed to fetch databases:', err)
@@ -326,7 +326,11 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
 
       if (res.ok) {
         const data = await res.json()
-        setInsight(data.insight)
+        setInsight({
+          summary: data.summary,
+          observations: data.observations || [],
+          trend: data.trends?.[0]?.direction,
+        })
         setShowInsight(true)
       }
     } catch {
@@ -377,12 +381,12 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
         body: JSON.stringify({ dataset: result, format }),
       })
 
-      if (format === 'CSV' && res.ok) {
+      if ((format === 'CSV' || format === 'JSON') && res.ok) {
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${visualizationName || 'export'}.csv`
+        a.download = `${visualizationName || 'export'}.${format.toLowerCase()}`
         a.click()
         URL.revokeObjectURL(url)
         toast.success('CSV downloaded')
@@ -430,9 +434,10 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
       }))
 
       const firstMetric = config.yAxis[0]
-      return config.sort === 'desc'
-        ? data.sort((a, b) => (Number((a as Record<string, unknown>)[firstMetric]) || 0) - (Number((b as Record<string, unknown>)[firstMetric]) || 0))
-        : data.sort((a, b) => (Number((a as Record<string, unknown>)[firstMetric]) || 0) - (Number((b as Record<string, unknown>)[firstMetric]) || 0))
+      return data.sort((a, b) => {
+        const difference = (Number((a as Record<string, unknown>)[firstMetric]) || 0) - (Number((b as Record<string, unknown>)[firstMetric]) || 0)
+        return config.sort === 'desc' ? -difference : difference
+      })
     }
 
     return processedRows.slice(0, config.limit)

@@ -98,7 +98,7 @@ const QUICK_ACTIONS = [
   { icon: Database, label: 'Connect DB', href: '/dashboard/databases/new', color: 'bg-blue-500' },
   { icon: MessageSquare, label: 'New Query', href: '/dashboard/chat', color: 'bg-purple-500' },
   { icon: BarChart3, label: 'Visualize', href: '/dashboard/visualizer', color: 'bg-orange-500' },
-  { icon: Plus, label: 'Dashboard', href: '/dashboard/dashboards/new', color: 'bg-green-500' },
+  { icon: Plus, label: 'Dashboard', href: '/dashboard/dashboards', color: 'bg-green-500' },
 ]
 
 const AI_INSIGHTS = [

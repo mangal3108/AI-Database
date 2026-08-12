@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getTenantContext } from '@/server/services/auth/tenant-context'
 import { createConnector } from '@/server/connectors/registry'
 import { recommendChart, analyzeDataset } from '@/server/services/visualization/chart-recommendation-engine'
+import { AIQueryGeneratorService } from '@/server/services/ai-query/ai-query-generator'
 import type { NormalizedDataset } from '@/server/services/visualization/types'
 
 /**
@@ -20,9 +21,9 @@ export async function POST(req: NextRequest) {
     const tenant = await getTenantContext(session.user.id)
     const body = await req.json()
 
-    const { databaseId, query } = body
+    const { databaseId, query, naturalLanguageQuery } = body
 
-    if (!databaseId || !query) {
+    if (!databaseId || (!query && !naturalLanguageQuery)) {
       return NextResponse.json(
         { error: 'Database ID and query are required' },
         { status: 400 }
@@ -46,9 +47,40 @@ export async function POST(req: NextRequest) {
 
     const startTime = Date.now()
 
-    // Execute query
+    // Execute query. Natural-language visualization requests use the same
+    // schema-grounded generator as chat, then pass through the connector's
+    // read-only execution path.
     const connector = await createConnector(database.type, database.encryptedCredentials)
-    const result = await connector.executeReadQuery(query)
+    await connector.connect()
+    let executableQuery = query as string | undefined
+    if (!executableQuery && naturalLanguageQuery) {
+      const metadata = await connector.getDatabaseMetadata()
+      const schemaContext = {
+        tables: metadata.schemas.flatMap(schema => schema.tables.map(table => ({
+          name: table.name,
+          schema: schema.name,
+          columns: table.columns.map(column => ({
+            name: column.name,
+            dataType: column.dataType,
+            isNullable: column.isNullable,
+            isPrimaryKey: column.isPrimaryKey,
+            isForeignKey: column.isForeignKey,
+          })),
+        }))),
+      }
+      const generated = await AIQueryGeneratorService.generateSQL({
+        naturalLanguageQuery,
+        databaseId,
+        databaseType: metadata.databaseType,
+        schemaContext,
+      })
+      executableQuery = generated.sql
+      if (!executableQuery) {
+        return NextResponse.json({ error: generated.reasoning }, { status: 422 })
+      }
+    }
+
+    const result = await connector.executeReadQuery(executableQuery!)
 
     if (!result.rows || result.rows.length === 0) {
       return NextResponse.json(
