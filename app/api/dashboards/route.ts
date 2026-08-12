@@ -60,6 +60,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
+    const existing = await prisma.dashboard.findFirst({
+      where: { organizationId: tenant.organizationId, name },
+    })
+    if (existing) return NextResponse.json({ dashboard: existing }, { status: 200 })
+
     const dashboard = await prisma.dashboard.create({
       data: {
         name,
