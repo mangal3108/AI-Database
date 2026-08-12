@@ -3,7 +3,6 @@
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { DatabaseLogo } from '@/components/database/database-logo'
-import { MoreHorizontal } from 'lucide-react'
 
 const DATABASES = [
   { id: 'MYSQL', name: 'MySQL' },
@@ -35,7 +34,8 @@ export function DatabaseConnectors() {
 
         <div className="flex flex-wrap justify-center gap-4">
           {DATABASES.map((db, index) => (
-            <motion.div
+            <motion.a
+              href="/integrations"
               key={db.name}
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -44,7 +44,7 @@ export function DatabaseConnectors() {
             >
               <DatabaseLogo type={db.id} className="w-10 h-10 group-hover:scale-110 transition-transform duration-300" />
               <span className="text-[10px] font-semibold text-slate-500 mt-3">{db.name}</span>
-            </motion.div>
+            </motion.a>
           ))}
           
           <motion.div

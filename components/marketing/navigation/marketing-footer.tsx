@@ -38,7 +38,7 @@ export function MarketingFooter() {
               </span>
             </Link>
             <p className="text-sm text-slate-500 mb-6">
-              AI-powered database intelligence. Get answers from your data instantly.
+              A clear, secure workspace for exploring the data your team already owns.
             </p>
             <div className="flex items-center gap-4">
               <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 hover:text-slate-900 transition-colors">

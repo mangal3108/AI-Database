@@ -58,7 +58,7 @@ export default function DatabaseChatPage() {
   return (
     <MarketingLayout>
       <ProductHero
-        badge="AI Database Chat"
+        badge="Database Chat"
         title="Chat with your database."
         subtitle="Without writing SQL."
         description="Connect your database and ask questions in plain English. Get instant answers, generated SQL, and visualizations — no SQL knowledge required."
@@ -83,7 +83,7 @@ export default function DatabaseChatPage() {
       {/* How It Works */}
       <div id="how-it-works">
         <ProductHowItWorks
-          title="How AI Database Chat works"
+          title="How Database Chat works"
           subtitle="From question to answer in under a second"
           steps={STEPS}
           theme="blue"

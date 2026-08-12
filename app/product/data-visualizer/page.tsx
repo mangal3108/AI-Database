@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { generateSEO } from '@/lib/seo'
 import { MarketingLayout } from '@/components/marketing/layout/marketing-layout'
-import { BarChart3, LineChart, PieChart, Sparkles, ArrowRight } from 'lucide-react'
+import { BarChart3, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 export const metadata: Metadata = generateSEO({
@@ -27,7 +27,7 @@ export default function DataVisualizerPage() {
           <BarChart3 className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Automated Chart Selection</h2>
           <p className="text-slate-400 text-sm max-w-md mx-auto mb-6">
-            Internite AI inspects query dataset structures to pick the optimal visualization format automatically.
+            Internite reads the shape of your query results and helps you choose a useful visualization quickly.
           </p>
           <Link href="/dashboard" className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-all">
             Try In Dashboard <ArrowRight size={16} />

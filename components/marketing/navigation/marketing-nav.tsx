@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown, Menu, X, ArrowRight, Database, Code, Shield, BarChart3, Brain, Zap, BookOpen, GitBranch, Box } from 'lucide-react'
+import { ChevronDown, Menu, X, ArrowRight, Database, Code, BarChart3, BookOpen, GitBranch, Box } from 'lucide-react'
 
 const FEATURES = [
   {
-    title: 'AI Database Chat',
+    title: 'Database Chat',
     description: 'Ask your database anything in plain English.',
     href: '/product/database-chat',
-    icon: Brain,
+    icon: Database,
     gradient: 'from-blue-500 to-indigo-500'
   },
   {

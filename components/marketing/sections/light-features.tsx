@@ -2,48 +2,48 @@
 
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
-import { MessageSquare, BarChart2, Database, ShieldCheck, Zap } from 'lucide-react'
+import { MessageSquare, BarChart2, Database, ShieldCheck, Layers } from 'lucide-react'
 
 const FEATURES = [
   {
-    title: 'Natural Language Queries',
-    description: 'Ask questions in plain English. No SQL required.',
+    title: 'Ask in your language',
+    description: 'Go from a business question to a trustworthy answer without writing SQL first.',
     icon: MessageSquare,
     color: 'text-blue-600',
     bg: 'bg-blue-100/50',
     cardBg: 'bg-[#f8faff]',
   },
   {
-    title: 'Smart Visualizations',
-    description: 'Get beautiful charts and graphs automatically.',
+    title: 'See the signal',
+    description: 'Turn the result into a chart or table that makes the important change obvious.',
     icon: BarChart2,
     color: 'text-blue-500',
     bg: 'bg-blue-100/50',
     cardBg: 'bg-[#f4f9ff]',
   },
   {
-    title: 'Multi-Database Support',
-    description: 'Connect and chat with multiple databases.',
+    title: 'Bring your stack',
+    description: 'Connect the databases your team already uses and keep each source in context.',
     icon: Database,
     color: 'text-emerald-500',
     bg: 'bg-emerald-100/50',
     cardBg: 'bg-[#f2fbf6]',
   },
   {
-    title: 'Secure & Private',
-    description: 'Your data is encrypted and never shared.',
+    title: 'Built for safe access',
+    description: 'Read-only controls, schema awareness, and clear query history keep exploration responsible.',
     icon: ShieldCheck,
     color: 'text-amber-500',
     bg: 'bg-amber-100/50',
     cardBg: 'bg-[#fef9f3]',
   },
   {
-    title: 'Real-time Answers',
-    description: 'Get accurate answers from live data instantly.',
-    icon: Zap,
-    color: 'text-pink-500',
-    bg: 'bg-pink-100/50',
-    cardBg: 'bg-[#fff5f8]',
+    title: 'Share the context',
+    description: 'Save useful queries and visualizations so decisions do not disappear in a chat thread.',
+    icon: Layers,
+    color: 'text-slate-700',
+    bg: 'bg-slate-200/70',
+    cardBg: 'bg-[#f6f7f8]',
   },
 ]
 
@@ -60,8 +60,9 @@ export function LightFeatures() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-            Everything you need to unlock your data
+            A calmer way to work with complex data
           </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-500">Designed around the real work: finding the right source, asking a precise question, and making the result useful.</p>
         </motion.div>
 
         <div className="flex flex-wrap justify-center gap-6">
