@@ -192,7 +192,7 @@ export function ChatInterface({
           if (!line.startsWith('data: ')) continue
           const data = line.slice(6)
           try {
-            const parsed = JSON.parse(data) as {
+              const parsed = JSON.parse(data) as {
               status?: string
               answer?: string
               query?: string
@@ -204,7 +204,9 @@ export function ChatInterface({
               sources?: AiResponse['sources']
               conversationId?: string
               messageId?: string
-              executionError?: string
+                executionError?: string
+                tablesUsed?: string[]
+                columnsUsed?: string[]
               message?: string
             }
 
@@ -225,7 +227,8 @@ export function ChatInterface({
                   confidence: parsed.confidence,
                   sources: parsed.sources,
                   rowCount: parsed.queryResult?.rowCount,
-                  tablesUsed: schemaData?.tables?.slice(0, 3).map(t => t.name) ?? [],
+                  tablesUsed: parsed.tablesUsed ?? [],
+                  fieldsUsed: parsed.columnsUsed ?? [],
                 },
                 queryResult: parsed.queryResult,
                 executionError: parsed.executionError,
@@ -246,6 +249,29 @@ export function ChatInterface({
       setIsLoading(false)
       setStatusStage('')
       inputRef.current?.focus()
+    }
+  }
+
+  const handleSaveQuery = async (message: MessageItem) => {
+    if (!selectedDb || !message.metadata?.query) {
+      toast.error('This response does not contain a saveable SQL query')
+      return
+    }
+    try {
+      const response = await fetch('/api/saved-queries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          databaseId: selectedDb,
+          query: message.metadata.query,
+          queryLanguage: message.metadata.queryLanguage || 'sql',
+        }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not save query')
+      toast.success('Query saved to your Saved Queries folder')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save query')
     }
   }
 
@@ -324,7 +350,7 @@ export function ChatInterface({
             )}
 
             {messages.map(msg => (
-              <MessageBubble key={msg.id} message={msg} />
+              <MessageBubble key={msg.id} message={msg} onSaveQuery={handleSaveQuery} />
             ))}
 
             {/* Execution Stage Loader */}

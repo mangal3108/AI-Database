@@ -51,6 +51,8 @@ export interface ConversationMessage {
 export interface QueryGenerationResult {
   sql?: string
   mongoPipeline?: object[]
+  tables?: string[]
+  columns?: string[]
   confidence: number
   reasoning: string
   suggestedVisualization?: {
@@ -135,6 +137,8 @@ User Request: ${naturalLanguageQuery}
 
       return {
         sql: parsed.sql ?? undefined,
+        tables: parsed.tables,
+        columns: parsed.columns,
         confidence: parsed.sql ? 0.9 : 0,
         reasoning: parsed.reason,
         suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext)
@@ -154,6 +158,8 @@ User Request: ${naturalLanguageQuery}
         if (sql && /^(select|with)\b/i.test(sql)) {
           return {
             sql,
+            tables: schemaContext.tables.filter(t => new RegExp(`\\b${escapeRegExp(t.name)}\\b`, 'i').test(sql)).map(t => t.name),
+            columns: schemaContext.tables.flatMap(t => t.columns.filter(c => new RegExp(`\\b${escapeRegExp(c.name)}\\b`, 'i').test(sql)).map(c => c.name)),
             confidence: 0.7,
             reasoning: 'Generated using the read-only SQL fallback.',
             suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext),
@@ -243,6 +249,10 @@ User Request: ${naturalLanguageQuery}
     // This will be overridden later by the deterministic chart config, but keeping skeleton for compatibility
     return { chartType: 'TABLE' }
   }
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 function extractSql(value: string): string {

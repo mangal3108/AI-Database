@@ -1,33 +1,62 @@
-import { describe, it, expect, vi } from 'vitest'
-import { runChatEngine } from '../server/services/chat/engine'
+import { describe, expect, it } from 'vitest'
+import { classifyQueryIntent, semanticValidateSQL, validateReadOnlyQuery } from '../server/services/query/safety'
 
-describe('Adversarial Testing for Data-Grounded Pipeline', () => {
-  const baseOptions = {
-    organizationId: 'org_1',
-    userId: 'user_1',
-    databaseConnectionId: 'db_1',
-  }
+const schema = {
+  tables: [{
+    name: 'users',
+    columns: [{ name: 'id' }, { name: 'email' }, { name: 'created_at' }],
+  }],
+} as any
 
-  it('1. Correct simple query - returns grounded answer', async () => {})
-  it('2. Wrong column - rejects and explains missing column', async () => {})
-  it('3. Ambiguous metric - triggers ClarificationNeeded', async () => {})
-  it('4. Missing table - rejects and explains missing table', async () => {})
-  it('5. Empty result - clearly states no matching records found', async () => {})
-  it('6. NULL values - handles nulls without hallucinating replacements', async () => {})
-  it('7. Duplicate rows - processes without inventing distinct data', async () => {})
-  it('8. Incorrect join - semantic validator catches invalid join path', async () => {})
-  it('9. Date timezone - performs calculation deterministically', async () => {})
-  it('10. Large dataset - truncates gracefully before LLM explanation', async () => {})
-  it('11. Multiple metrics - generates valid structured JSON', async () => {})
-  it('12. Multiple databases - prevents cross-DB joins', async () => {})
-  it('13. Stale schema - triggers RAG re-index on hash mismatch', async () => {})
-  it('14. Prompt injection - query safety rejects ignore instructions', async () => {})
-  it('15. SQL injection - safety rejects DROP/UPDATE statements', async () => {})
-  it('16. Hallucination attempt - refuses to invent sales figures not in schema', async () => {})
-  it('17. Incorrect chart request - uses deterministic fallback', async () => {})
-  it('18. Unsupported visualization - maps to TABLE', async () => {})
-  it('19. Database timeout - returns actionable error, not an answer', async () => {})
-  it('20. Database connection failure - returns actionable error instantly', async () => {})
+describe('read-only query safety and grounding', () => {
+  it.each([
+    'DROP TABLE users',
+    'DELETE FROM users WHERE id = 1',
+    'UPDATE users SET email = \'x@example.com\'',
+    'INSERT INTO users (email) VALUES (\'x@example.com\')',
+    'TRUNCATE users',
+  ])('rejects destructive SQL: %s', query => {
+    expect(validateReadOnlyQuery(query, 'postgresql').isValid).toBe(false)
+  })
 
-  // IMPORTANT: For every test verify that Internite NEVER invents database values.
+  it('accepts a read-only aggregate and reports its type', () => {
+    const result = validateReadOnlyQuery('SELECT COUNT(*) FROM users', 'postgresql')
+    expect(result.isValid).toBe(true)
+    expect(result.queryType).toBe('AGGREGATE')
+  })
+
+  it('warns on an unbounded row query without rejecting it', () => {
+    const result = validateReadOnlyQuery('SELECT id, email FROM users', 'postgresql')
+    expect(result.isValid).toBe(true)
+    expect(result.warnings?.some(w => w.includes('no LIMIT'))).toBe(true)
+  })
+
+  it('blocks restricted PostgreSQL file functions', () => {
+    expect(validateReadOnlyQuery("SELECT pg_read_file('/etc/passwd')", 'postgresql').isValid).toBe(false)
+  })
+
+  it('blocks MySQL file export operations', () => {
+    expect(validateReadOnlyQuery("SELECT * FROM users INTO OUTFILE '/tmp/users.csv'", 'mysql').isValid).toBe(false)
+  })
+
+  it('rejects tables missing from the retrieved schema', () => {
+    const result = semanticValidateSQL(['orders'], [], schema)
+    expect(result.isValid).toBe(false)
+    expect(result.reason).toContain("Table 'orders'")
+  })
+
+  it('rejects columns missing from the retrieved schema', () => {
+    const result = semanticValidateSQL(['users'], ['password_hash'], schema)
+    expect(result.isValid).toBe(false)
+    expect(result.reason).toContain("Column 'password_hash'")
+  })
+
+  it('accepts grounded tables and columns case-insensitively', () => {
+    expect(semanticValidateSQL(['USERS'], ['EMAIL'], schema).isValid).toBe(true)
+  })
+
+  it('classifies common user intents deterministically', () => {
+    expect(classifyQueryIntent('show the schema tables')).toBe('SCHEMA_QUERY')
+    expect(classifyQueryIntent('plot monthly revenue')).toBe('VISUALIZATION')
+  })
 })

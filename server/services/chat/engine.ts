@@ -30,6 +30,8 @@ export interface ChatEngineResult {
   warnings?: string[]
   confidence?: string | number
   sources?: any[]
+  tablesUsed?: string[]
+  columnsUsed?: string[]
   conversationId: string
   messageId: string
   executionError?: string
@@ -129,9 +131,8 @@ export async function runChatEngine(opts: ChatEngineOptions): Promise<ChatEngine
     } else {
       genResult = await AIQueryGeneratorService.generateSQL(genRequest)
       generatedSql = genResult.sql
-      // Mock tables/columns if undefined for now
-      tablesUsed = [] 
-      columnsUsed = []
+      tablesUsed = genResult.tables ?? []
+      columnsUsed = genResult.columns ?? []
     }
 
     if (!generatedSql && !genResult?.mongoPipeline) {
@@ -232,6 +233,8 @@ export async function runChatEngine(opts: ChatEngineOptions): Promise<ChatEngine
     return {
       answer,
       query: generatedSql,
+      tablesUsed,
+      columnsUsed,
       queryResult,
       visualization: chartConfig,
       conversationId,

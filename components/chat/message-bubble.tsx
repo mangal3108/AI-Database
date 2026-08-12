@@ -62,7 +62,7 @@ function parseFormattedAnswer(rawContent: string) {
     .replace(/\*\*(.*?)\*\*/g, '$1')
 }
 
-export function MessageBubble({ message }: { message: MessageItem }) {
+export function MessageBubble({ message, onSaveQuery }: { message: MessageItem; onSaveQuery?: (message: MessageItem) => void }) {
   const [activeTab, setActiveTab] = useState<'answer' | 'results' | 'sql' | 'chart' | 'insights' | 'lineage'>('answer')
   const [copied, setCopied] = useState(false)
 
@@ -171,7 +171,7 @@ export function MessageBubble({ message }: { message: MessageItem }) {
           {/* Quick Actions */}
           <div className="flex items-center gap-1 text-slate-400">
             <button
-              onClick={() => toast.success('Query saved to your Saved Queries folder')}
+              onClick={() => onSaveQuery ? onSaveQuery(message) : toast.error('Saving is unavailable for this conversation')}
               className="p-1.5 hover:text-amber-400 rounded-lg hover:bg-slate-800 transition-colors"
               title="Save Query"
             >
