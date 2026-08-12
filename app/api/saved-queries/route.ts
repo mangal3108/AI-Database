@@ -3,6 +3,22 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { validateReadOnlyQuery } from '@/server/services/query/safety'
 
+export async function GET() {
+  const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const membership = await prisma.membership.findFirst({ where: { userId } })
+  if (!membership) return NextResponse.json({ error: 'Workspace membership required' }, { status: 403 })
+
+  const savedQueries = await prisma.savedQuery.findMany({
+    where: { organizationId: membership.organizationId },
+    include: { query: { include: { connection: { select: { name: true, type: true } } } } },
+    orderBy: { updatedAt: 'desc' },
+  })
+  return NextResponse.json({ savedQueries })
+}
+
 export async function POST(request: Request) {
   const session = await auth()
   const userId = session?.user?.id
