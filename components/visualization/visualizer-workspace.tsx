@@ -203,14 +203,15 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
       const res = await fetch(`/api/databases/${databaseId}/schema`)
       if (res.ok) {
         const data = await res.json()
-        const tableList: TableInfo[] = data.schemas?.flatMap((s: { tables: TableInfo[] }) =>
-          s.tables.map((t: TableInfo) => ({
-            name: t.name,
-            columns: Array.isArray(t.columns)
-              ? t.columns.map((c) => typeof c === 'string' ? c : (c as { name: string }).name)
-              : [],
-          }))
-        ) || []
+        const tableList: TableInfo[] = (data.tables || data.schemas?.flatMap((s: { tables: TableInfo[] }) => s.tables) || [])
+          .map((t: TableInfo | string) => typeof t === 'string'
+            ? { name: t, columns: [] }
+            : {
+                name: t.name,
+                columns: Array.isArray(t.columns)
+                  ? t.columns.map((c) => typeof c === 'string' ? c : (c as { name: string }).name)
+                  : [],
+              })
         setTables(tableList)
       }
     } catch (err) {

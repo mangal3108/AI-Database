@@ -67,6 +67,7 @@ export async function GET(
     // 2. Fallback: query live database via connector
     try {
       const connector = await createConnector(database.type, database.encryptedCredentials)
+      await connector.connect()
       const schemaNames = await connector.getSchemas()
 
       const schemas = await Promise.all(
@@ -80,6 +81,7 @@ export async function GET(
         })
       )
       const tables = schemas.flatMap(s => s.tables.map(t => ({ name: typeof t === 'string' ? t : (t as any).name, columns: [] })))
+      await connector.disconnect().catch(() => undefined)
       return NextResponse.json({ tables, schemas })
     } catch {
       return NextResponse.json({ tables: [], schemas: [] })
