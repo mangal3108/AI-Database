@@ -81,18 +81,18 @@ export function WorkspaceSwitcher({ collapsed }: { collapsed?: boolean }) {
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/10 transition-all text-left"
+        className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-all text-left"
       >
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
             {activeWorkspace?.name ? activeWorkspace.name.slice(0, 2).toUpperCase() : 'WS'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-white truncate">{activeWorkspace?.name ?? 'Personal Workspace'}</p>
+            <p className="text-xs font-semibold text-slate-900 truncate">{activeWorkspace?.name ?? 'Personal Workspace'}</p>
             <p className="text-[10px] text-slate-500 uppercase tracking-wider">{activeWorkspace?.plan ?? 'FREE'} Plan · {activeWorkspace?.role ?? 'OWNER'}</p>
           </div>
         </div>
-        <ChevronsUpDown size={14} className="text-slate-500 flex-shrink-0 ml-1" />
+        <ChevronsUpDown size={14} className="text-slate-400 flex-shrink-0 ml-1" />
       </button>
 
       {/* Dropdown Menu */}
