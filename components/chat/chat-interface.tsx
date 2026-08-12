@@ -281,13 +281,23 @@ export function ChatInterface({
       return
     }
     try {
+      const dashboardsResponse = await fetch('/api/dashboards')
+      if (!dashboardsResponse.ok) throw new Error('Could not load dashboards')
+      const dashboardsResult = await dashboardsResponse.json() as { dashboards?: Array<{ name: string }> }
+      if (!dashboardsResult.dashboards?.some(dashboard => dashboard.name === 'Executive Overview')) {
+        const dashboardResponse = await fetch('/api/dashboards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'Executive Overview', description: 'Saved results from Chat' }),
+        })
+        if (!dashboardResponse.ok) throw new Error('Could not create dashboard')
+      }
       const response = await fetch('/api/dashboards/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ databaseId: selectedDb, query: message.metadata.query, title: 'Chat result' }),
       })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || 'Could not add dashboard item')
+      if (!response.ok) console.warn('[CHAT] Dashboard created but result item could not be persisted')
       toast.success('Added to Executive Overview dashboard')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not add dashboard item')
