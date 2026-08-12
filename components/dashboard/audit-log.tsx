@@ -209,6 +209,7 @@ export function AuditLog() {
   const [filter, setFilter] = useState<AuditFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'all'>('week')
 
   const filteredEvents = events.filter(event => {
@@ -234,6 +235,18 @@ export function AuditLog() {
     return true
   })
 
+  const exportEvents = () => {
+    const headers = ['Action', 'Resource', 'Status', 'User', 'Timestamp', 'IP']
+    const rows = filteredEvents.map(event => [event.action, event.resource, event.status, event.userEmail, event.timestamp.toISOString(), event.ip])
+    const csv = [headers, ...rows].map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="bg-[#0D111A] border border-slate-800 rounded-2xl overflow-hidden">
       {/* Header */}
@@ -248,7 +261,7 @@ export function AuditLog() {
               <p className="text-xs text-slate-500">{filteredEvents.length} events</p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors">
+          <button onClick={exportEvents} className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors">
             <Download size={14} />
             Export
           </button>

@@ -120,7 +120,7 @@ export class SubscriptionService {
    * Get active subscription & plan details for an organization.
    */
   static async getSubscription(organizationId: string) {
-    let sub = await prisma.subscription.findFirst({
+    const sub = await prisma.subscription.findFirst({
       where: { organizationId, status: { in: ['ACTIVE', 'TRIALING'] } },
       include: { plan: { include: { entitlements: true } } },
       orderBy: { createdAt: 'desc' },

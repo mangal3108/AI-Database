@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   BarChart3,
   LineChart,
@@ -150,7 +150,6 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
   const [selectedDatabase, setSelectedDatabase] = useState<string>('')
   const [tables, setTables] = useState<TableInfo[]>([])
   const [selectedTable, setSelectedTable] = useState<string>('')
-  const [tableColumns, setTableColumns] = useState<string[]>([])
 
   const [query, setQuery] = useState<string>('')
   const [naturalLanguageQuery, setNaturalLanguageQuery] = useState<string>('')
@@ -177,40 +176,17 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [visualizationName, setVisualizationName] = useState('')
 
+  const tableColumns = tables.find(table => table.name === selectedTable)?.columns ?? []
+
   // ============================================
   // EFFECTS
   // ============================================
-
-  useEffect(() => {
-    fetchDatabases()
-  }, [])
-
-  useEffect(() => {
-    if (selectedDatabase) {
-      fetchTables(selectedDatabase)
-    } else {
-      setTables([])
-      setSelectedTable('')
-    }
-  }, [selectedDatabase])
-
-  useEffect(() => {
-    if (selectedTable && tables.length > 0) {
-      const table = tables.find(t => t.name === selectedTable)
-      if (table) {
-        setTableColumns(table.columns)
-        if (!config.xAxis && table.columns.length > 0) {
-          setConfig(prev => ({ ...prev, xAxis: table.columns[0] }))
-        }
-      }
-    }
-  }, [selectedTable, tables])
 
   // ============================================
   // DATA FETCHING
   // ============================================
 
-  async function fetchDatabases() {
+  const fetchDatabases = useCallback(async () => {
     try {
       const res = await fetch('/api/databases')
       if (res.ok) {
@@ -220,9 +196,9 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
     } catch (err) {
       console.error('Failed to fetch databases:', err)
     }
-  }
+  }, [])
 
-  async function fetchTables(databaseId: string) {
+  const fetchTables = useCallback(async (databaseId: string) => {
     try {
       const res = await fetch(`/api/databases/${databaseId}/schema`)
       if (res.ok) {
@@ -240,7 +216,25 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
     } catch (err) {
       console.error('Failed to fetch tables:', err)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    // This effect intentionally hydrates client state from the API on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchDatabases()
+  }, [fetchDatabases])
+
+  useEffect(() => {
+    if (!selectedDatabase) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTables([])
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedTable('')
+      return
+    }
+
+    void fetchTables(selectedDatabase)
+  }, [fetchTables, selectedDatabase])
 
   async function executeQuery() {
     if (!selectedDatabase) {

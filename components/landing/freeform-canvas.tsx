@@ -196,7 +196,7 @@ export function FreeformCanvas({
     const mesh = new Mesh(gl, { geometry, program })
 
     // Store container in a local variable for resize closure
-    let currentContainer = container
+    const currentContainer = container
     currentContainer.appendChild(gl.canvas)
 
     function resize() {

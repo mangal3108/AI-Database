@@ -41,7 +41,7 @@ export function BillingClient() {
       const json = await res.json()
       if (res.ok) {
         if (json.url) {
-          window.location.href = json.url
+          window.location.assign(json.url)
         } else {
           toast.success(`Redirecting to checkout for ${planSlug.toUpperCase()} plan...`)
           fetchBilling()

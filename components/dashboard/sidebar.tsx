@@ -13,6 +13,7 @@ import { signOut } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CommandPalette } from '@/components/dashboard/command-palette'
+import { WorkspaceSwitcher } from '@/components/dashboard/workspace-switcher'
 
 interface NavItem {
   href: string
@@ -126,35 +127,21 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           onClick={() => setCollapsed(!collapsed)}
           className="hidden lg:flex text-slate-400 hover:text-slate-600 transition-colors p-1"
           title="Toggle Sidebar"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <PanelLeft size={15} />
         </button>
       </div>
 
-      {/* Workspace Selector */}
       <div className="p-2.5 border-b border-slate-200 shrink-0">
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
-          <div className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 font-bold text-xs flex items-center justify-center border border-indigo-200">
-            {user?.name ? user.name[0]?.toUpperCase() : 'M'}
-          </div>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-900 truncate">
-                {user?.name ? `${user.name}'s Workspace` : 'My Workspace'}
-              </p>
-              <p className={`text-[9px] uppercase tracking-wider font-mono ${planSlug === 'pro' || planSlug === 'business' ? 'text-indigo-600' : 'text-slate-500'}`}>
-                {planName} PLAN
-              </p>
-            </div>
-          )}
-          {!collapsed && <ChevronDown size={13} className="text-slate-400" />}
-        </div>
+        <WorkspaceSwitcher collapsed={collapsed} />
       </div>
 
       {/* New Chat CTA */}
       <div className="p-2.5 shrink-0">
         <Link
           href="/dashboard/chat"
+          aria-label="Start a new conversation"
           className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl transition-all shadow-sm shadow-indigo-200 text-xs"
         >
           <Plus size={15} />

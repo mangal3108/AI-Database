@@ -63,15 +63,10 @@ export function TerminalHeroDemo() {
   const current = DEMO_STEPS[stepIdx]
 
   useEffect(() => {
-    let t1: NodeJS.Timeout
     let t2: NodeJS.Timeout
     let t3: NodeJS.Timeout
     let t4: NodeJS.Timeout
-
-    setStage('connect')
-    setTypedText('')
-
-    t1 = setTimeout(() => {
+    const t1: NodeJS.Timeout = setTimeout(() => {
       setStage('typing')
       let charIdx = 0
       const text = current.query
@@ -87,6 +82,8 @@ export function TerminalHeroDemo() {
         }
       }, 35)
     }, 1000)
+    setStage('connect')
+    setTypedText('')
 
     const cycleTimer = setTimeout(() => {
       setStepIdx((prev) => (prev + 1) % DEMO_STEPS.length)

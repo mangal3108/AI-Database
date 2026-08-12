@@ -286,9 +286,9 @@ export function CommandCenter() {
             <Clock className="w-5 h-5 text-slate-400" />
             Recent Activity
           </h2>
-          <button className="text-sm text-slate-400 hover:text-white flex items-center gap-1">
+          <Link href="/dashboard/activity" className="text-sm text-slate-400 hover:text-white flex items-center gap-1">
             View all <ChevronRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
         <div className="space-y-2">
           {activities.map((activity) => (

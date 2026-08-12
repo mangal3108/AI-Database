@@ -15,28 +15,35 @@ export default async function DashboardPage() {
   const session = await auth()
   const userId = session?.user?.id ?? ''
 
-  const membership = await prisma.membership.findFirst({
-    where: { userId },
-    include: { organization: true },
-  })
+  // The overview should still render when a new account has no membership yet
+  // or when the database is temporarily unavailable. The individual data
+  // pages can surface their own error state without taking down the shell.
+  let databases: Awaited<ReturnType<typeof prisma.databaseConnection.findMany>> = []
+  let conversations: Awaited<ReturnType<typeof prisma.conversation.findMany>> = []
 
-  const orgId = membership?.organizationId
+  try {
+    const membership = await prisma.membership.findFirst({
+      where: { userId },
+      include: { organization: true },
+    })
 
-  const databases = orgId
-    ? await prisma.databaseConnection.findMany({
-        where: { organizationId: orgId },
-        take: 5,
-        orderBy: { updatedAt: 'desc' },
-      })
-    : []
-
-  const conversations = orgId
-    ? await prisma.conversation.findMany({
-        where: { organizationId: orgId },
-        take: 5,
-        orderBy: { updatedAt: 'desc' },
-      })
-    : []
+    if (membership?.organizationId) {
+      ;[databases, conversations] = await Promise.all([
+        prisma.databaseConnection.findMany({
+          where: { organizationId: membership.organizationId },
+          take: 5,
+          orderBy: { updatedAt: 'desc' },
+        }),
+        prisma.conversation.findMany({
+          where: { organizationId: membership.organizationId },
+          take: 5,
+          orderBy: { updatedAt: 'desc' },
+        }),
+      ])
+    }
+  } catch (error) {
+    console.error('[DASHBOARD] Failed to load overview data:', error)
+  }
 
   return (
     <div className="p-6 lg:p-10 max-w-6xl mx-auto font-sans space-y-10 text-slate-100">
@@ -88,6 +95,34 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Main Section Grid */}
+      <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.06] p-5 sm:p-6" aria-labelledby="getting-started-title">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-300">Getting started</p>
+            <h2 id="getting-started-title" className="mt-1 text-lg font-bold text-white">Turn your data into answers</h2>
+            <p className="mt-1 text-xs text-slate-400">Complete these steps to get the most from Internite AI.</p>
+          </div>
+          <span className="rounded-full border border-indigo-400/20 bg-indigo-400/10 px-2.5 py-1 text-[11px] font-semibold text-indigo-200">
+            {databases.length > 0 ? '1 of 3 complete' : '0 of 3 complete'}
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <Link href="/dashboard/databases/new" className="group rounded-xl border border-white/10 bg-black/10 p-4 transition hover:border-indigo-400/40 hover:bg-white/[0.05]">
+            <span className="text-xs font-bold text-white">{databases.length > 0 ? '✓ Database connected' : '1. Connect a database'}</span>
+            <span className="mt-1 block text-[11px] text-slate-400">PostgreSQL, MySQL, MongoDB and more</span>
+          </Link>
+          <Link href="/dashboard/chat" className="group rounded-xl border border-white/10 bg-black/10 p-4 transition hover:border-indigo-400/40 hover:bg-white/[0.05]">
+            <span className="text-xs font-bold text-white">2. Ask your first question</span>
+            <span className="mt-1 block text-[11px] text-slate-400">Use natural language to explore your data</span>
+          </Link>
+          <Link href="/dashboard/visualizer" className="group rounded-xl border border-white/10 bg-black/10 p-4 transition hover:border-indigo-400/40 hover:bg-white/[0.05]">
+            <span className="text-xs font-bold text-white">3. Create a visualization</span>
+            <span className="mt-1 block text-[11px] text-slate-400">Save and share a useful insight</span>
+          </Link>
+        </div>
+      </section>
 
       {/* Main Section Grid */}
       <div className="grid lg:grid-cols-3 gap-8">

@@ -63,7 +63,7 @@ export function WorkspaceSwitcher({ collapsed }: { collapsed?: boolean }) {
     localStorage.setItem('active_org_id', workspaceId)
     toast.success('Switching workspace context...')
     setIsOpen(false)
-    window.location.href = `/dashboard?org=${workspaceId}`
+    window.location.assign(`/dashboard?org=${workspaceId}`)
   }
 
   if (collapsed) {

@@ -128,7 +128,7 @@ export default function ComparePage() {
               <ul className="space-y-2 text-sm text-slate-500">
                 <li className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-                  <span>Doesn't know your schema</span>
+                  <span>Doesn&apos;t know your schema</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />

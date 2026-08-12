@@ -11,7 +11,7 @@ import {
   CheckoutResult,
   CustomerResult,
   SubscriptionResult,
-} from '../payment-gateway'
+} from '../payment-types'
 
 export class RazorpayPaymentGateway extends PaymentGateway {
   private keyId: string
