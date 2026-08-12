@@ -204,8 +204,8 @@ function getStatusColor(status: AuditEvent['status']): string {
 // COMPONENT
 // ============================================
 
-export function AuditLog() {
-  const [events, setEvents] = useState<AuditEvent[]>(MOCK_AUDIT_EVENTS)
+export function AuditLog({ initialEvents = [] }: { initialEvents?: AuditEvent[] }) {
+  const [events, setEvents] = useState<AuditEvent[]>(initialEvents)
   const [filter, setFilter] = useState<AuditFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
