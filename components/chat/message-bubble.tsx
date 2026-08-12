@@ -62,7 +62,7 @@ function parseFormattedAnswer(rawContent: string) {
     .replace(/\*\*(.*?)\*\*/g, '$1')
 }
 
-export function MessageBubble({ message, onSaveQuery }: { message: MessageItem; onSaveQuery?: (message: MessageItem) => void }) {
+export function MessageBubble({ message, onSaveQuery, onAddToDashboard }: { message: MessageItem; onSaveQuery?: (message: MessageItem) => void; onAddToDashboard?: (message: MessageItem) => void }) {
   const [activeTab, setActiveTab] = useState<'answer' | 'results' | 'sql' | 'chart' | 'insights' | 'lineage'>('answer')
   const [copied, setCopied] = useState(false)
 
@@ -178,7 +178,7 @@ export function MessageBubble({ message, onSaveQuery }: { message: MessageItem; 
               <Bookmark size={13} />
             </button>
             <button
-              onClick={() => toast.success('Added widget to Executive Overview Dashboard')}
+              onClick={() => onAddToDashboard ? onAddToDashboard(message) : toast.error('Dashboard action is unavailable')}
               className="p-1.5 hover:text-indigo-400 rounded-lg hover:bg-slate-800 transition-colors"
               title="Add to Dashboard"
             >

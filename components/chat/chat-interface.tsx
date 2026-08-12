@@ -275,6 +275,25 @@ export function ChatInterface({
     }
   }
 
+  const handleAddToDashboard = async (message: MessageItem) => {
+    if (!selectedDb || !message.metadata?.query) {
+      toast.error('This response does not contain a dashboard-ready query')
+      return
+    }
+    try {
+      const response = await fetch('/api/dashboards/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ databaseId: selectedDb, query: message.metadata.query, title: 'Chat result' }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not add dashboard item')
+      toast.success('Added to Executive Overview dashboard')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not add dashboard item')
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
@@ -350,7 +369,7 @@ export function ChatInterface({
             )}
 
             {messages.map(msg => (
-              <MessageBubble key={msg.id} message={msg} onSaveQuery={handleSaveQuery} />
+              <MessageBubble key={msg.id} message={msg} onSaveQuery={handleSaveQuery} onAddToDashboard={handleAddToDashboard} />
             ))}
 
             {/* Execution Stage Loader */}
