@@ -2,18 +2,18 @@
 
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
 import { DatabaseLogo } from '@/components/database/database-logo'
-import { SectionBackground } from '@/components/landing/section-background'
+import { MoreHorizontal } from 'lucide-react'
 
 const DATABASES = [
-  { id: 'POSTGRESQL', name: 'PostgreSQL', href: '/databases/postgresql' },
-  { id: 'MYSQL', name: 'MySQL', href: '/databases/mysql' },
-  { id: 'MONGODB', name: 'MongoDB', href: '/databases/mongodb' },
-  { id: 'SQLSERVER', name: 'SQL Server', href: '/databases/sql-server' },
-  { id: 'MARIADB', name: 'MariaDB', href: '/databases/mariadb' },
-  { id: 'SQLITE', name: 'SQLite', href: '/databases/sqlite' },
+  { id: 'MYSQL', name: 'MySQL' },
+  { id: 'POSTGRESQL', name: 'PostgreSQL' },
+  { id: 'SQLSERVER', name: 'SQL Server' },
+  { id: 'SQLITE', name: 'SQLite' },
+  { id: 'MONGODB', name: 'MongoDB' },
+  { id: 'ORACLE', name: 'Oracle' },
+  { id: 'MARIADB', name: 'MariaDB' },
+  { id: 'REDIS', name: 'Redis' },
 ]
 
 export function DatabaseConnectors() {
@@ -21,60 +21,47 @@ export function DatabaseConnectors() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <section className="py-24 px-6 bg-[#050505] relative overflow-hidden" ref={ref}>
-      <SectionBackground theme="cyan" opacity={0.3} />
-      <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header */}
+    <section className="py-16 px-4 bg-white" ref={ref}>
+      <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
-          <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-3 font-mono">{'>'} DATABASE_CONNECTORS</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Connect the databases you already use.
+          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+            WORKS WITH ALL MAJOR DATABASES
           </h2>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            No data migration. No new tools to learn. Connect your existing database and start asking questions immediately.
-          </p>
         </motion.div>
 
-        {/* Database Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
+        <div className="flex flex-wrap justify-center gap-4">
           {DATABASES.map((db, index) => (
-            <motion.a
+            <motion.div
               key={db.name}
-              href={db.href}
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: index * 0.05 }}
-              className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-[#090D16]/90 border border-slate-800/80 hover:border-indigo-500/40 hover:bg-slate-900/90 backdrop-blur-xl transition-all shadow-xl"
+              className="flex flex-col items-center justify-center p-4 w-28 h-24 rounded-2xl bg-white border border-slate-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.15)] transition-all cursor-pointer group"
             >
-              <div className="w-full flex justify-between items-center text-[9px] font-mono text-slate-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-emerald-400/90 font-semibold">TLS 1.3</span>
-              </div>
-              <DatabaseLogo type={db.id} className="w-9 h-9 flex-shrink-0 transition-transform group-hover:scale-110 my-1" />
-              <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-white transition-colors">{db.name}</span>
-            </motion.a>
+              <DatabaseLogo type={db.id} className="w-10 h-10 group-hover:scale-110 transition-transform duration-300" />
+              <span className="text-[10px] font-semibold text-slate-500 mt-3">{db.name}</span>
+            </motion.div>
           ))}
-        </div>
-
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.4 }}
-          className="text-center"
-        >
-          <Link
-            href="/integrations"
-            className="inline-flex items-center gap-2 text-emerald-400 font-medium hover:text-emerald-300 transition-colors"
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: DATABASES.length * 0.05 }}
+            className="flex flex-col items-center justify-center p-4 w-28 h-24 rounded-2xl bg-slate-50 border border-slate-200 transition-all cursor-pointer hover:bg-slate-100"
           >
-            View all supported databases
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </motion.div>
+            <div className="grid grid-cols-2 gap-1 mb-3">
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+              <div className="w-2 h-2 rounded-full bg-slate-300" />
+            </div>
+            <span className="text-[10px] font-semibold text-slate-500">and more</span>
+          </motion.div>
+        </div>
       </div>
     </section>
   )

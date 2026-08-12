@@ -1,189 +1,144 @@
-﻿'use client'
+'use client'
 
-import { Check } from 'lucide-react'
+import { Check, Gift } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
-import { PricingGlowBackground } from './backgrounds/PricingGlowBackground'
-
-const PLAN_PERSONAS = [
-  { label: 'Exploring / side project', plan: 'free' },
-  { label: 'Startup / small team', plan: 'pro' },
-  { label: 'Data or product team', plan: 'pro' },
-  { label: 'Enterprise / agency', plan: 'enterprise' },
-]
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
 
 export function PricingSection() {
-  const [analysts, setAnalysts] = useState(3)
-  const [queriesPerWeek, setQueriesPerWeek] = useState(40)
-  const [minsPerQuery, setMinsPerQuery] = useState(30)
-
-  const hoursSavedPerMonth = Math.round((analysts * queriesPerWeek * minsPerQuery) / 60 * 4)
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <section id="pricing" className="py-24 border-t border-slate-800/30 relative overflow-hidden">
-      <PricingGlowBackground />
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-16">
-          <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3 font-mono">Pricing</p>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            Simple, predictable pricing. <span className="text-[#60A5FA]">No hidden fees.</span>
+    <section id="pricing" className="py-24 px-4 bg-slate-50" ref={ref}>
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            Start for free. Scale as you grow.
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto mt-4">
-            Start with the generous free tier or bring your own AI key for unlimited queries at cost.
-          </p>
-        </div>
-
-        {/* Which plan? selector */}
-        <div className="mb-14 max-w-3xl mx-auto">
-          <p className="text-center text-xs font-mono font-bold text-slate-500 uppercase tracking-widest mb-4">Which Internite are you?</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {PLAN_PERSONAS.map(p => (
-              <div key={p.label} className="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-center">
-                <p className="text-xs text-slate-300 mb-1.5">{p.label}</p>
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                  p.plan === 'free' ? 'bg-slate-700 text-slate-300' :
-                  p.plan === 'pro' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                  'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                }`}>
-                  {p.plan === 'free' ? 'Free' : p.plan === 'pro' ? 'Pro' : 'Enterprise'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 max-w-5xl mx-auto">
           {/* Free */}
-          <div className="bg-slate-900/60 backdrop-blur-sm border border-slate-800/50 rounded-3xl p-8 flex flex-col justify-between">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.1 }}
+            className="bg-white border border-slate-200 rounded-3xl p-8 flex flex-col shadow-sm hover:shadow-md transition-shadow"
+          >
             <div>
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Free Tier</p>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-extrabold text-white">$0</span>
-                <span className="text-xs text-slate-500 ml-1">/ month</span>
+              <p className="text-sm font-bold text-slate-900 mb-4">Free</p>
+              <div className="flex items-baseline mb-2">
+                <span className="text-4xl font-black text-slate-900">$0</span>
+                <span className="text-sm text-slate-500 ml-1">/ month</span>
               </div>
-              <p className="text-xs text-slate-400 mt-2">Perfect for side projects and individual developers</p>
-              <ul className="mt-6 space-y-3 text-xs text-slate-300">
-                {['1 Workspace & 1 Database Connection','100 Free AI Queries / month','Basic Hybrid Schema RAG','5 Saved Queries & Export to CSV'].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+              <p className="text-sm text-slate-500 mb-6">Perfect for side projects and individual developers.</p>
+              
+              <Link href="/signup" className="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold py-3 rounded-xl text-sm text-center transition-colors block mb-8">
+                Get started for free
+              </Link>
+
+              <ul className="space-y-4 text-sm text-slate-600">
+                {['1 Workspace', '1 Database Connection', '100 AI Queries / month', 'Basic Visualizations'].map(f => (
+                  <li key={f} className="flex items-center gap-3">
+                    <Check size={16} className="text-blue-500 shrink-0" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <Link href="/signup" className="mt-8 w-full bg-slate-800/50 hover:bg-slate-700/50 text-white font-bold py-3.5 rounded-2xl text-xs text-center border border-slate-700/50 transition-colors block">
-              Get started free →
-            </Link>
-          </div>
+          </motion.div>
 
           {/* Pro */}
-          <div className="bg-slate-900/60 backdrop-blur-sm border-2 border-emerald-500/50 rounded-3xl p-8 flex flex-col justify-between relative shadow-xl shadow-emerald-500/5">
-            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.2 }}
+            className="bg-white border-2 border-blue-500 rounded-3xl p-8 flex flex-col relative shadow-xl shadow-blue-500/10"
+          >
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
               MOST POPULAR
-            </span>
+            </div>
             <div>
-              <p className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Pro Developer</p>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-extrabold text-white">$29</span>
-                <span className="text-xs text-slate-500 ml-1">/ month</span>
+              <p className="text-sm font-bold text-blue-600 mb-4">Pro</p>
+              <div className="flex items-baseline mb-2">
+                <span className="text-4xl font-black text-slate-900">$29</span>
+                <span className="text-sm text-slate-500 ml-1">/ month</span>
               </div>
-              <p className="text-xs text-slate-400 mt-2">Stop waiting for your data team.</p>
+              <p className="text-sm text-slate-500 mb-6">For professionals and small teams that need more power.</p>
+              
+              <Link href="/signup" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm text-center transition-colors block mb-8 shadow-sm">
+                Start 14-day free trial
+              </Link>
 
-              <ul className="mt-6 space-y-3 text-xs text-slate-300">
-                {[
-                  'Unlimited Database Connections',
-                  '5,000 AI questions / month',
-                  'Advanced Schema Graph RAG',
-                  'Bring Your Own AI Key (BYO-Key)',
-                  'Automated Dashboards & Charts',
-                  'API access & webhooks',
-                ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+              <ul className="space-y-4 text-sm text-slate-600">
+                {['Everything in Free, plus:', 'Unlimited Database Connections', '5,000 AI Queries / month', 'Advanced Custom Charts', 'Priority Email Support'].map((f, i) => (
+                  <li key={f} className={`flex items-center gap-3 ${i === 0 ? 'font-bold text-slate-900 pb-2' : ''}`}>
+                    {i > 0 && <Check size={16} className="text-blue-500 shrink-0" />}
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <Link href="/signup" className="mt-8 w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3.5 rounded-2xl text-xs text-center transition-colors shadow-lg shadow-emerald-500/20 block">
-              Start 14-day free trial →
-            </Link>
-          </div>
+          </motion.div>
 
-          {/* Enterprise */}
-          <div className="bg-slate-900/60 backdrop-blur-sm border border-slate-800/50 rounded-3xl p-8 flex flex-col justify-between">
+          {/* Team */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.3 }}
+            className="bg-white border border-slate-200 rounded-3xl p-8 flex flex-col shadow-sm hover:shadow-md transition-shadow"
+          >
             <div>
-              <p className="text-sm font-bold text-purple-400 uppercase tracking-wider">Enterprise</p>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-extrabold text-white">Custom</span>
+              <p className="text-sm font-bold text-slate-900 mb-4">Team</p>
+              <div className="flex items-baseline mb-2">
+                <span className="text-4xl font-black text-slate-900">$79</span>
+                <span className="text-sm text-slate-500 ml-1">/ month</span>
               </div>
-              <p className="text-xs text-slate-400 mt-2">Dedicated infrastructure, SSO, and custom RBAC</p>
-              <ul className="mt-6 space-y-3 text-xs text-slate-300">
-                {[
-                  'Multi-Tenant Enterprise Workspaces',
-                  'SAML SSO & Advanced RBAC Roles',
-                  'Immutable Audit Logs & SOC 2 Readiness Roadmap',
-                  'Dedicated VPC & On-Premises Proxy Support',
-                ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <Check size={16} className="text-emerald-400 shrink-0" />
+              <p className="text-sm text-slate-500 mb-6">For growing teams that need collaboration features.</p>
+              
+              <Link href="/signup" className="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold py-3 rounded-xl text-sm text-center transition-colors block mb-8">
+                Start 14-day free trial
+              </Link>
+
+              <ul className="space-y-4 text-sm text-slate-600">
+                {['Everything in Pro, plus:', 'Up to 10 Team Members', 'Unlimited AI Queries', 'Shared Dashboards', 'API & Webhooks'].map((f, i) => (
+                  <li key={f} className={`flex items-center gap-3 ${i === 0 ? 'font-bold text-slate-900 pb-2' : ''}`}>
+                    {i > 0 && <Check size={16} className="text-blue-500 shrink-0" />}
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <Link href="/contact" className="mt-8 w-full bg-slate-800/50 hover:bg-slate-700/50 text-white font-bold py-3.5 rounded-2xl text-xs text-center border border-slate-700/50 transition-colors block">
-              Contact sales →
-            </Link>
-          </div>
+          </motion.div>
         </div>
 
-        {/* ROI Calculator */}
-        <div className="max-w-2xl mx-auto bg-slate-900/60 border border-slate-800 rounded-2xl p-8">
-          <p className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest mb-2">ROI Estimate</p>
-          <h3 className="text-xl font-black text-white mb-1">How much analyst time could you save?</h3>
-          <p className="text-xs text-slate-400 mb-6">These are estimates to help you think through the value. Your actual results will vary.</p>
-
-          <div className="space-y-5">
-            <div>
-              <div className="flex justify-between text-xs text-slate-400 mb-2">
-                <span>Analysts / team members answering data questions</span>
-                <span className="font-bold text-white">{analysts}</span>
-              </div>
-              <input type="range" min={1} max={20} value={analysts} onChange={e => setAnalysts(Number(e.target.value))}
-                className="w-full accent-indigo-500 h-1.5 rounded-full" />
+        {/* Custom Plan / Enterprise Box */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.4 }}
+          className="max-w-3xl mx-auto bg-gradient-to-r from-indigo-50 to-purple-50 rounded-3xl p-8 border border-indigo-100/50 flex flex-col md:flex-row items-center justify-between gap-6"
+        >
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-indigo-100 flex items-center justify-center shrink-0">
+              <Gift size={28} className="text-indigo-500" />
             </div>
             <div>
-              <div className="flex justify-between text-xs text-slate-400 mb-2">
-                <span>Data questions per person per week</span>
-                <span className="font-bold text-white">{queriesPerWeek}</span>
-              </div>
-              <input type="range" min={5} max={200} step={5} value={queriesPerWeek} onChange={e => setQueriesPerWeek(Number(e.target.value))}
-                className="w-full accent-indigo-500 h-1.5 rounded-full" />
-            </div>
-            <div>
-              <div className="flex justify-between text-xs text-slate-400 mb-2">
-                <span>Average minutes to answer each question manually</span>
-                <span className="font-bold text-white">{minsPerQuery} min</span>
-              </div>
-              <input type="range" min={5} max={120} step={5} value={minsPerQuery} onChange={e => setMinsPerQuery(Number(e.target.value))}
-                className="w-full accent-indigo-500 h-1.5 rounded-full" />
+              <h3 className="text-xl font-bold text-slate-900 mb-1">Need a custom plan?</h3>
+              <p className="text-sm text-slate-600">Contact us for custom limits, SLA, and enterprise features like SSO.</p>
             </div>
           </div>
+          <Link href="/contact" className="shrink-0 px-6 py-3 bg-white text-slate-900 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm text-sm">
+            Contact Sales
+          </Link>
+        </motion.div>
 
-          <div className="mt-6 p-4 rounded-xl bg-indigo-600/10 border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <div className="text-3xl font-black text-white">~{hoursSavedPerMonth} hours</div>
-              <div className="text-xs text-slate-400">estimated saved per month</div>
-            </div>
-            <Link href="/signup" className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl text-sm transition-all shrink-0">
-              Start Free
-            </Link>
-          </div>
-          <p className="mt-3 text-[10px] text-slate-600 text-center">Pro is $29/month. At {analysts} analyst{analysts !== 1 ? 's' : ''} and {queriesPerWeek} questions/week, the tool pays for itself in saved time.</p>
-        </div>
       </div>
     </section>
   )
