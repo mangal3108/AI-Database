@@ -192,6 +192,10 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
       if (res.ok) {
         const data = await res.json()
         setDatabases(data.connections || data.databases || [])
+        const available = (data.connections || data.databases || []) as Database[]
+        if (available.length > 0) {
+          setSelectedDatabase(current => current || available[0].id)
+        }
       }
     } catch (err) {
       console.error('Failed to fetch databases:', err)
@@ -669,7 +673,7 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Data Explorer */}
         {showLeftPanel && (
-          <div className="w-64 border-r bg-card overflow-y-auto hidden lg:block">
+          <div className="w-64 border-r bg-card overflow-y-auto hidden md:block">
             <div className="p-4 space-y-6">
               {/* Database Selector */}
               <div>
