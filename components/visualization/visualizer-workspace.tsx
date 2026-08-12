@@ -395,7 +395,7 @@ export function VisualizerWorkspace({ userId, initialDatabases = [] }: Visualize
         a.download = `${visualizationName || 'export'}.${format.toLowerCase()}`
         a.click()
         URL.revokeObjectURL(url)
-        toast.success('CSV downloaded')
+        toast.success(`${format} downloaded`)
       }
     } catch {
       toast.error('Export failed')
