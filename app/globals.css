@@ -111,6 +111,50 @@ textarea {
   }
 }
 
+/* Authenticated product surfaces use one calm, Apple-style light canvas. */
+.dashboard-light {
+  background: #f7f7f5;
+  color: #1d1d1f;
+}
+
+.dashboard-light [class*="bg-[#"],
+.dashboard-light [class*="bg-slate-950"],
+.dashboard-light [class*="bg-slate-900"],
+.dashboard-light [class*="bg-[#0D111A"],
+.dashboard-light [class*="bg-[#111113"],
+.dashboard-light [class*="bg-[#050505"] {
+  background-color: #ffffff !important;
+}
+
+.dashboard-light .text-white,
+.dashboard-light .text-slate-100,
+.dashboard-light .text-slate-200,
+.dashboard-light .text-slate-300 {
+  color: #1d1d1f !important;
+}
+
+.dashboard-light .text-slate-400,
+.dashboard-light .text-slate-500 {
+  color: #6e6e73 !important;
+}
+
+.dashboard-light [class*="border-white"],
+.dashboard-light [class*="border-slate-800"],
+.dashboard-light [class*="border-slate-700"] {
+  border-color: #e5e5e7 !important;
+}
+
+.dashboard-light [class*="hover:bg-slate-800"]:hover,
+.dashboard-light [class*="hover:bg-white"]:hover {
+  background-color: #f2f2f2 !important;
+}
+
+.dashboard-light .bg-indigo-600,
+.dashboard-light .bg-indigo-500,
+.dashboard-light .bg-blue-600 {
+  color: #ffffff !important;
+}
+
 /* Glass Utilities */
 .apple-glass {
   background: rgba(17, 17, 19, 0.75);
