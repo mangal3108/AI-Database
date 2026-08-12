@@ -673,7 +673,7 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Data Explorer */}
         {showLeftPanel && (
-          <div className="w-64 border-r bg-card overflow-y-auto hidden md:block">
+          <div className="w-64 shrink-0 border-r bg-card overflow-y-auto">
             <div className="p-4 space-y-6">
               {/* Database Selector */}
               <div>
