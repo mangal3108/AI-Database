@@ -125,8 +125,8 @@ ${historyContext}
 
 User Request: ${naturalLanguageQuery}
 `
+    const ai = getAIProvider()
     try {
-      const ai = getAIProvider()
       const rawResponse = await ai.generateStructuredOutput<z.infer<typeof sqlGenerationSchema>>([
         { role: 'user', content: prompt }
       ], { temperature: 0 })
@@ -140,7 +140,29 @@ User Request: ${naturalLanguageQuery}
         suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext)
       }
     } catch (error) {
-      console.error('[AI-QUERY] SQL Generation failed:', error)
+      console.error('[AI-QUERY] Structured SQL generation failed:', error)
+
+      // Some providers return valid SQL but do not reliably honor the larger
+      // JSON contract. Fall back to the provider's plain SQL mode, then let
+      // the query safety layer decide whether it is executable.
+      try {
+        const rawQuery = await ai.generateQuery(
+          `Generate one read-only SQL query for this request. Return only SQL.\nUser request: ${naturalLanguageQuery}`,
+          schemaDescription
+        )
+        const sql = extractSql(rawQuery)
+        if (sql && /^(select|with)\b/i.test(sql)) {
+          return {
+            sql,
+            confidence: 0.7,
+            reasoning: 'Generated using the read-only SQL fallback.',
+            suggestedVisualization: this.suggestVisualization(naturalLanguageQuery, schemaContext),
+          }
+        }
+      } catch (fallbackError) {
+        console.error('[AI-QUERY] Plain SQL fallback failed:', fallbackError)
+      }
+
       return {
         confidence: 0,
         reasoning: 'Failed to generate a valid SQL query from the available schema. Please try rephrasing your request.',
@@ -221,4 +243,14 @@ User Request: ${naturalLanguageQuery}
     // This will be overridden later by the deterministic chart config, but keeping skeleton for compatibility
     return { chartType: 'TABLE' }
   }
+}
+
+function extractSql(value: string): string {
+  let sql = value.trim()
+  const fenced = sql.match(/```(?:sql)?\s*([\s\S]*?)```/i)
+  if (fenced?.[1]) sql = fenced[1].trim()
+  sql = sql.replace(/^sql\s*:\s*/i, '').trim()
+  const start = sql.search(/\b(select|with)\b/i)
+  if (start > 0) sql = sql.slice(start)
+  return sql.replace(/;?\s*$/, ';')
 }
