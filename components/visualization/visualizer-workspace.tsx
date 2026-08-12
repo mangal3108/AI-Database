@@ -629,6 +629,18 @@ export function VisualizerWorkspace({ userId }: VisualizerWorkspaceProps) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Database className="w-4 h-4" />
+            <select
+              aria-label="Select visualizer database"
+              value={selectedDatabase}
+              onChange={e => { setSelectedDatabase(e.target.value); setSelectedTable(''); setTables([]) }}
+              className="max-w-40 rounded-lg border bg-background px-2 py-1.5 text-sm text-foreground"
+            >
+              <option value="">Select database</option>
+              {databases.map(db => <option key={db.id} value={db.id}>{db.name}</option>)}
+            </select>
+          </label>
           {result && (
             <>
               <button
